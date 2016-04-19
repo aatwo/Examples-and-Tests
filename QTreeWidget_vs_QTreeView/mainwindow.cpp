@@ -7,8 +7,14 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    treeWidgetRowCount = 0;
     qsrand( QDateTime::currentMSecsSinceEpoch() );
+
+    on_treeWidget_columnCountEdit_editingFinished();
     on_treeWidget_sectionCountEdit_editingFinished();
+    on_treeWidget_intermittentFrequencyToAddEdit_editingFinished();
+
+    connect( &treeWidgetTimer, &QTimer::timeout, this, &MainWindow::on_treeWidget_addItemTimerExpired );
 }
 
 MainWindow::~MainWindow()
@@ -26,8 +32,7 @@ void MainWindow::on_treeWidget_columnCountEdit_editingFinished()
     ui->treeWidget->setColumnCount( newColumnCount );
     for( int i = 0; i < newColumnCount; i++ )
     {
-        headerLabels.append( RandomString( 5, 10 ) );
-        ui->treeWidget->resizeColumnToContents( i );
+        headerLabels.append( RandomString() );
     }
     ui->treeWidget->setHeaderLabels( headerLabels );
 }
@@ -58,12 +63,6 @@ void MainWindow::on_treeWidget_sectionCountEdit_editingFinished()
         }
     }
 
-    for( int i = 0; i < ui->treeWidget->columnCount(); i++ )
-    {
-        ui->treeWidget->resizeColumnToContents( i );
-    }
-
-
     ui->treeWidget_instantSectionToAddToEdit->setMaximum( newSectionCount );
 }
 
@@ -74,37 +73,61 @@ void MainWindow::on_treeWidget_intermittentRowsToAddEdit_editingFinished()
 
 void MainWindow::on_treeWidget_intermittentFrequencyToAddEdit_editingFinished()
 {
-
+    treeWidgetTimer.setInterval( ui->treeWidget_intermittentFrequencyToAddEdit->value() );
 }
 
 void MainWindow::on_treeWidget_intermittentStartButton_clicked()
 {
-
+    treeWidgetTimer.start();
 }
 
 void MainWindow::on_treeWidget_intermittentStopButton_clicked()
 {
-
-}
-
-void MainWindow::on_treeWidget_instantRowsToAddEdit_editingFinished()
-{
-
+    treeWidgetTimer.stop();
 }
 
 void MainWindow::on_treeWidget_instantAddButton_clicked()
 {
+    QElapsedTimer timer;
+    timer.start();
+
     int rowCount = ui->treeWidget_instantRowsToAddEdit->value();
-    QTreeWidgetItem* sectionItem = ui->treeWidget->topLevelItem( ui->treeWidget_instantSectionToAddToEdit->value() - 1 );
+    int columnCount = ui->treeWidget->columnCount();
+    int randomStringGenerateCount = rowCount * columnCount;
+
+    if( randomStringGenerateCount > randomStringQueue.size() )
+    {
+        Log( QString( "Warning: string queue too small. %1 random strings will be generated..." ).arg( randomStringGenerateCount - randomStringQueue.size() ) );
+    }
+
+    SetStatus( QString ( "Adding %1 rows of data..." ).arg( randomStringGenerateCount ) );
+
+    int sectionValue = ui->treeWidget_instantSectionToAddToEdit->value();
+    if( !sectionValue )
+        sectionValue = RandomNumber( 1, ui->treeWidget->topLevelItemCount() );
+
+    sectionValue = sectionValue - 1;
+    QTreeWidgetItem* sectionItem = ui->treeWidget->topLevelItem( sectionValue );
 
     for( int i = 0; i < rowCount; i++ )
     {
-        QStringList rowData = RandomStringList( ui->treeWidget->columnCount(), 10, 20 );
+        QStringList rowData = RandomStringList( ui->treeWidget->columnCount() );
         QTreeWidgetItem* item = new QTreeWidgetItem( rowData );
 
         sectionItem->addChild( item );
     }
 
+    qint64 msElapsed = timer.elapsed();
+    Log( QString( "Finished adding data to the tree widget %1 ms" ).arg( msElapsed ) );
+
+    treeWidgetRowCount += rowCount;
+    UpdateTreeWidgetRowCountLabel();
+    UpdateRandomStringCountLabel();
+    ClearStatus();
+}
+
+void MainWindow::on_treeWidget_resizeColumnsButton_clicked()
+{
     for( int i = 0; i < ui->treeWidget->columnCount(); i++ )
         ui->treeWidget->resizeColumnToContents( i );
 }
@@ -121,11 +144,58 @@ void MainWindow::on_treeWidget_instantClearButton_clicked()
         }
     }
 
+    treeWidgetRowCount = 0;
+    UpdateTreeWidgetRowCountLabel();
 }
 
-void MainWindow::on_addItemTimerExpired()
+void MainWindow::on_treeWidget_addItemTimerExpired()
 {
-    // TODO
+    QElapsedTimer timer;
+    timer.start();
+
+    int rowCount = ui->treeWidget_intermittentRowsToAddEdit->value();
+    int columnCount = ui->treeWidget->columnCount();
+    int randomStringGenerateCount = rowCount * columnCount;
+
+    if( randomStringGenerateCount > randomStringQueue.size() )
+    {
+        Log( QString( "Warning: string queue too small. %1 random strings will be generated..." ).arg( randomStringGenerateCount - randomStringQueue.size() ) );
+    }
+
+    SetStatus( QString ( "Adding %1 rows of data..." ).arg( randomStringGenerateCount ) );
+
+    int sectionValue = ui->treeWidget_intermittentSectionToAddToValueEdit->value();
+    if( !sectionValue )
+        sectionValue = RandomNumber( 1, ui->treeWidget->topLevelItemCount() );
+
+    sectionValue = sectionValue - 1;
+    QTreeWidgetItem* sectionItem = ui->treeWidget->topLevelItem( sectionValue );
+
+    for( int i = 0; i < rowCount; i++ )
+    {
+        QStringList rowData = RandomStringList( ui->treeWidget->columnCount() );
+        QTreeWidgetItem* item = new QTreeWidgetItem( rowData );
+
+        sectionItem->addChild( item );
+    }
+
+    qint64 msElapsed = timer.elapsed();
+    Log( QString( "Finished adding data to the tree widget %1 ms" ).arg( msElapsed ) );
+
+    treeWidgetRowCount += rowCount;
+    UpdateTreeWidgetRowCountLabel();
+    UpdateRandomStringCountLabel();
+    ClearStatus();
+}
+
+void MainWindow::on_treeWidget_expandAllButton_clicked()
+{
+    ui->treeWidget->expandAll();
+}
+
+void MainWindow::on_treeWidget_collapseAllButton_clicked()
+{
+    ui->treeWidget->collapseAll();
 }
 
 void MainWindow::on_treeView_intermittentRowsToAddEdit_editingFinished()
@@ -181,37 +251,35 @@ QString MainWindow::RandomString(int length)
         ret.append( c );
     }
 
+    if( ui->randomStringPrependWithStringEdit->isChecked() )
+    {
+        ret.prepend( ui->randomStringPrependWithStringValueEdit->text() );
+    }
+
+    if( ui->randomStringInjectWithStringEdit->isChecked() )
+    {
+        ret.insert( ret.length() / 2, ui->randomStringInjectWithStringValueEdit->text() );
+    }
+
+    if( ui->randomStringAppendWithStringEdit->isChecked() )
+    {
+        ret.append( ui->randomStringAppendWithStringValueEdit->text() );
+    }
+
     return ret;
 }
 
-QString MainWindow::RandomString(int minLength, int maxLength)
+QString MainWindow::RandomString()
 {
+    if( !randomStringQueue.isEmpty() )
+        return randomStringQueue.dequeue();
+
+    int minLength = ui->randomStringMinLength->value();
+    int maxLength = ui->randomStringMaxLength->value();
+
     int length = RandomNumber( minLength, maxLength );
+
     return RandomString( length );
-}
-
-QStringList MainWindow::RandomStringList(int stringCount, int minStringLength, int maxStringLength)
-{
-    QStringList ret;
-
-    for( int i = 0; i < stringCount; i++ )
-    {
-        ret.append( RandomString( minStringLength, maxStringLength ) );
-    }
-
-    return ret;
-}
-
-QStringList MainWindow::RandomStringList(int stringCount, int stringLength)
-{
-    QStringList ret;
-
-    for( int i = 0; i < stringCount; i++ )
-    {
-        ret.append( RandomString( stringLength ) );
-    }
-
-    return ret;
 }
 
 QStringList MainWindow::RandomStringList(int stringCount)
@@ -220,8 +288,70 @@ QStringList MainWindow::RandomStringList(int stringCount)
 
     for( int i = 0; i < stringCount; i++ )
     {
-        ret.append( RandomString( 15 ) );
+        ret.append( RandomString() );
     }
 
     return ret;
+}
+
+void MainWindow::Log(QString message)
+{
+    if( ui->logStateEdit->isChecked() )
+        ui->log->appendPlainText( message );
+}
+
+void MainWindow::SetStatus(QString status)
+{
+    statusBar()->showMessage( status );
+}
+
+void MainWindow::ClearStatus()
+{
+    statusBar()->clearMessage();
+}
+
+void MainWindow::UpdateRandomStringCountLabel()
+{
+    ui->randomStringCountLabel->setText( QString::number( randomStringQueue.size() ) );
+}
+
+void MainWindow::UpdateTreeWidgetRowCountLabel()
+{
+    ui->treeWidget_rowCountLabel->setText( QString::number( treeWidgetRowCount ) );
+}
+
+void MainWindow::on_randomStringGenerateButton_clicked()
+{
+    QElapsedTimer timer;
+    timer.start();
+
+    int generateCount = ui->randomStringGenerationCount->value();
+    SetStatus( QString ( "Generating %1 random strings..." ).arg( generateCount ) );
+
+    for( int i = 0; i < generateCount; i++ )
+    {
+        int minLength = ui->randomStringMinLength->value();
+        int maxLength = ui->randomStringMaxLength->value();
+
+        int length = RandomNumber( minLength, maxLength );
+
+        randomStringQueue.append( RandomString( length ) );
+    }
+
+    qint64 msElapsed = timer.elapsed();
+    Log( QString( "Finished generating random strings in %1 ms" ).arg( msElapsed ) );
+
+    UpdateRandomStringCountLabel();
+    ClearStatus();
+}
+
+void MainWindow::on_randomStringClearButton_clicked()
+{
+    randomStringQueue.clear();
+    UpdateRandomStringCountLabel();
+}
+
+void MainWindow::on_clearLogButton_clicked()
+{
+    ui->log->clear();
 }

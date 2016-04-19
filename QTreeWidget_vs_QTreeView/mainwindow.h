@@ -26,10 +26,12 @@ class MainWindow : public QMainWindow
         void on_treeWidget_intermittentFrequencyToAddEdit_editingFinished();
         void on_treeWidget_intermittentStartButton_clicked();
         void on_treeWidget_intermittentStopButton_clicked();
-        void on_treeWidget_instantRowsToAddEdit_editingFinished();
         void on_treeWidget_instantAddButton_clicked();
+        void on_treeWidget_resizeColumnsButton_clicked();
         void on_treeWidget_instantClearButton_clicked();
-        void on_addItemTimerExpired();
+        void on_treeWidget_addItemTimerExpired();
+        void on_treeWidget_expandAllButton_clicked();
+        void on_treeWidget_collapseAllButton_clicked();
 
 
         // TreeView slots
@@ -42,19 +44,34 @@ class MainWindow : public QMainWindow
         void on_treeView_instantClearButton_clicked();
 
 
+        // Random string slots
+        void on_randomStringGenerateButton_clicked();
+        void on_randomStringClearButton_clicked();
 
+
+        void on_clearLogButton_clicked();
 
     private:
 
+        // Random functions
         int RandomNumber( int min, int max );
         QString RandomString( int length );
-        QString RandomString( int minLength, int maxLength );
-        QStringList RandomStringList( int stringCount, int minStringLength, int maxStringLength );
-        QStringList RandomStringList( int stringCount, int stringLength );
+        QString RandomString();
         QStringList RandomStringList( int stringCount );
+
+        // Other functions
+        void Log( QString message );
+        void SetStatus( QString status );
+        void ClearStatus();
+        void UpdateRandomStringCountLabel();
+        void UpdateTreeWidgetRowCountLabel();
+
 
         Ui::MainWindow *ui;
         QTimer treeViewTimer, treeWidgetTimer;
+        int treeWidgetRowCount;
+
+        QQueue<QString> randomStringQueue;
 };
 
 #endif // MAINWINDOW_H
