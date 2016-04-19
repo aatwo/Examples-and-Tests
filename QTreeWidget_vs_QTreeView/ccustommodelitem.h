@@ -3,27 +3,30 @@
 
 #include <QList>
 #include <QVariant>
+#include <QVector>
 
 class CCustomModelItem
 {
 public:
-    CCustomModelItem( QList<QVariant> data, CCustomModelItem* parent = nullptr );
+    explicit CCustomModelItem(const QVector<QVariant> &data, CCustomModelItem *parent = 0);
     ~CCustomModelItem();
 
-    void appendChild(CCustomModelItem *child);
-    CCustomModelItem *child(int row);
+    CCustomModelItem *child(int number);
     int childCount() const;
     int columnCount() const;
     QVariant data(int column) const;
-    int row() const;
-    CCustomModelItem *parentItem();
-
+    bool insertChildren(int position, int count, int columns);
+    bool insertColumns(int position, int columns);
+    CCustomModelItem *parent();
+    bool removeChildren(int position, int count);
+    bool removeColumns(int position, int columns);
+    int childNumber() const;
+    bool setData(int column, const QVariant &value);
 
 private:
-
-    CCustomModelItem* mParent;
-    QList<CCustomModelItem*> mChildren;
-    QList<QVariant> mData;
+    QList<CCustomModelItem*> childItems;
+    QVector<QVariant> itemData;
+    CCustomModelItem *parentItem;
 };
 
 #endif // CCUSTOMMODELITEM_H

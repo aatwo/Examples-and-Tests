@@ -1,156 +1,252 @@
 #include "ccustommodel.h"
+#include "ccustommodelitem.h"
 
-CCustomModel::CCustomModel(QObject *parent) : QAbstractItemModel(parent)
+CCustomModel::CCustomModel(CRandomStringManager* randomStringManager, const QStringList &headers, int sectionCount, QObject *parent)
+    : QAbstractItemModel(parent),
+      randomStringManager( randomStringManager )
 {
-    QList<QVariant> rootData;
-    rootData << "Column A" << "Column B" << "Column C" << "Column D" << "Column E";
-    mRoot = new CCustomModelItem( rootData );
+    QVector<QVariant> rootData;
+    foreach (QString header, headers)
+        rootData << header;
 
-    QList<QVariant> rowOneData, rowTwoData, rowThreeData;
+    rootItem = new CCustomModelItem(rootData);
 
-    rowOneData << "Row One:" << "" << "" << "" << "";
-    rowTwoData << "Row Two:" << "" << "" << "" << "";
-    rowThreeData << "Row Three:" << "" << "" << "" << "";
-
-    CCustomModelItem* dataSetOneItem    = new CCustomModelItem( rowOneData, mRoot );
-    CCustomModelItem* dataSetTwoItem    = new CCustomModelItem( rowTwoData, mRoot );
-    CCustomModelItem* dataSetThreeItem  = new CCustomModelItem( rowThreeData, mRoot );
-
-    for( int i = 0; i < 10; i++ )
+    // Create the sections
+    for( int i = 0; i < sectionCount; i++ )
     {
-        QList<QVariant> childRowData;
-
-        for( int column = 0; column < 5; column++ )
-            childRowData.append( GetRandomString( 10, 10 ) );
-
-        CCustomModelItem* childItem = new CCustomModelItem( childRowData, dataSetOneItem );
-        dataSetOneItem->appendChild( childItem );
+        rootItem->insertChildren( i, 1, rootItem->columnCount() );
+        rootItem->child( i )->setData( 0, QString( "Section %1" ).arg( i + 1 ) );
     }
-
-    for( int i = 0; i < 10; i++ )
-    {
-        QList<QVariant> childRowData;
-
-        for( int column = 0; column < 5; column++ )
-            childRowData.append( GetRandomString( 10, 10 ) );
-
-        CCustomModelItem* childItem = new CCustomModelItem( childRowData, dataSetTwoItem );
-        dataSetTwoItem->appendChild( childItem );
-    }
-
-    for( int i = 0; i < 10; i++ )
-    {
-        QList<QVariant> childRowData;
-
-        for( int column = 0; column < 5; column++ )
-            childRowData.append( GetRandomString( 10, 10 ) );
-
-        CCustomModelItem* childItem = new CCustomModelItem( childRowData, dataSetThreeItem );
-        dataSetThreeItem->appendChild( childItem );
-    }
-
-    mRoot->appendChild( dataSetOneItem );
-    mRoot->appendChild( dataSetTwoItem );
-    mRoot->appendChild( dataSetThreeItem );
 }
 
 CCustomModel::~CCustomModel()
 {
-    delete mRoot;
+    delete rootItem;
 }
 
-int CCustomModel::columnCount(const QModelIndex &parent) const
+void CCustomModel::SetSectionCount( int count )
 {
-    if( parent.isValid() )
-        return static_cast<CCustomModelItem*>( parent.internalPointer() )->columnCount();
-    else
-        return mRoot->columnCount();
+    if( count == rootItem->childCount() )
+        return;
+
+    if( count > rootItem->childCount() )
+    {
+        for( int i = 0; i < count; i++ )
+        {
+            int index = rootItem->childCount();
+            insertRow( index );
+
+            for( int j = 0; j < rootItem->columnCount(); j++ )
+                rootItem->child( index )->setData( j, randomStringManager->RandomString() );
+        }
+    }
+}
+
+int CCustomModel::columnCount(const QModelIndex & /* parent */) const
+{
+    return rootItem->columnCount();
 }
 
 QVariant CCustomModel::data(const QModelIndex &index, int role) const
 {
-    if( !index.isValid() )
+    if (!index.isValid())
         return QVariant();
 
-    if( role != Qt::DisplayRole )
+    if (role != Qt::DisplayRole && role != Qt::EditRole)
         return QVariant();
 
-    CCustomModelItem* item = static_cast<CCustomModelItem*>( index.internalPointer() );
+    CCustomModelItem *item = getItem(index);
 
-    return item->data( index.column() );
-}
-
-QModelIndex CCustomModel::index(int row, int column, const QModelIndex &parent) const
-{
-    if( !hasIndex( row, column, parent ) )
-        return QModelIndex();
-
-    CCustomModelItem* parentItem;
-
-    if( !parent.isValid() )
-        parentItem = mRoot;
-    else
-        parentItem = static_cast<CCustomModelItem*>( parent.internalPointer() );
-
-    CCustomModelItem* childItem = parentItem->child( row );
-    if( childItem )
-        return createIndex( row, column, childItem );
-    else
-        return QModelIndex();
-}
-
-QModelIndex CCustomModel::parent(const QModelIndex &index) const
-{
-    if( !index.isValid() )
-        return QModelIndex();
-
-    CCustomModelItem* childItem = static_cast<CCustomModelItem*>( index.internalPointer() );
-    CCustomModelItem* parentItem = childItem->parentItem();
-
-    if( parentItem == mRoot )
-        return QModelIndex();
-
-    return createIndex( parentItem->row(), 0, parentItem );
-}
-
-int CCustomModel::rowCount(const QModelIndex &parent) const
-{
-    CCustomModelItem* parentItem;
-    if( parent.column() > 0 )
-        return 0;
-
-    if( !parent.isValid() )
-        parentItem = mRoot;
-    else
-        parentItem = static_cast<CCustomModelItem*>( parent.internalPointer() );
-
-    return parentItem->childCount();
+    return item->data(index.column());
 }
 
 Qt::ItemFlags CCustomModel::flags(const QModelIndex &index) const
 {
-    if( !index.isValid() )
+    if (!index.isValid())
         return 0;
 
-    return QAbstractItemModel::flags( index );
+    return /*Qt::ItemIsEditable |*/ QAbstractItemModel::flags(index);
 }
 
-int CCustomModel::GetRandomNumber(int min, int max)
+CCustomModelItem *CCustomModel::getItem(const QModelIndex &index) const
 {
-    return qrand() % (max - min + 1) + min;
-}
-
-QString CCustomModel::GetRandomString(int minLength, int maxLength)
-{
-    QString ret;
-    int length = GetRandomNumber( minLength, maxLength );
-
-    for( int i = 0; i < length; i++ )
-    {
-        char randomChar = static_cast<char>( GetRandomNumber( 33, 126 ) );
-        ret.append( randomChar );
+    if (index.isValid()) {
+        CCustomModelItem *item = static_cast<CCustomModelItem*>(index.internalPointer());
+        if (item)
+            return item;
     }
-
-    return ret;
+    return rootItem;
 }
 
+QVariant CCustomModel::headerData(int section, Qt::Orientation orientation,
+                               int role) const
+{
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+        return rootItem->data(section);
+
+    return QVariant();
+}
+
+QModelIndex CCustomModel::index(int row, int column, const QModelIndex &parent) const
+{
+    if (parent.isValid() && parent.column() != 0)
+        return QModelIndex();
+
+    CCustomModelItem *parentItem = getItem(parent);
+
+    CCustomModelItem *childItem = parentItem->child(row);
+    if (childItem)
+        return createIndex(row, column, childItem);
+    else
+        return QModelIndex();
+}
+
+bool CCustomModel::insertColumns(int position, int columns, const QModelIndex &parent)
+{
+    bool success;
+
+    beginInsertColumns(parent, position, position + columns - 1);
+    success = rootItem->insertColumns(position, columns);
+    endInsertColumns();
+
+    return success;
+}
+
+bool CCustomModel::insertRows(int position, int rows, const QModelIndex &parent)
+{
+    CCustomModelItem *parentItem = getItem(parent);
+    bool success;
+
+    beginInsertRows(parent, position, position + rows - 1);
+    success = parentItem->insertChildren(position, rows, rootItem->columnCount());
+    endInsertRows();
+
+    return success;
+}
+
+QModelIndex CCustomModel::parent(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return QModelIndex();
+
+    CCustomModelItem *childItem = getItem(index);
+    CCustomModelItem *parentItem = childItem->parent();
+
+    if (parentItem == rootItem)
+        return QModelIndex();
+
+    return createIndex(parentItem->childNumber(), 0, parentItem);
+}
+
+bool CCustomModel::removeColumns(int position, int columns, const QModelIndex &parent)
+{
+    bool success;
+
+    beginRemoveColumns(parent, position, position + columns - 1);
+    success = rootItem->removeColumns(position, columns);
+    endRemoveColumns();
+
+    if (rootItem->columnCount() == 0)
+        removeRows(0, rowCount());
+
+    return success;
+}
+
+bool CCustomModel::removeRows(int position, int rows, const QModelIndex &parent)
+{
+    CCustomModelItem *parentItem = getItem(parent);
+    bool success = true;
+
+    beginRemoveRows(parent, position, position + rows - 1);
+    success = parentItem->removeChildren(position, rows);
+    endRemoveRows();
+
+    return success;
+}
+
+int CCustomModel::rowCount(const QModelIndex &parent) const
+{
+    CCustomModelItem *parentItem = getItem(parent);
+
+    return parentItem->childCount();
+}
+
+bool CCustomModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (role != Qt::EditRole)
+        return false;
+
+    CCustomModelItem *item = getItem(index);
+    bool result = item->setData(index.column(), value);
+
+    if (result)
+        emit dataChanged(index, index);
+
+    return result;
+}
+
+bool CCustomModel::setHeaderData(int section, Qt::Orientation orientation,
+                              const QVariant &value, int role)
+{
+    if (role != Qt::EditRole || orientation != Qt::Horizontal)
+        return false;
+
+    bool result = rootItem->setData(section, value);
+
+    if (result)
+        emit headerDataChanged(orientation, section, section);
+
+    return result;
+}
+
+//void CCustomModel::setupModelData(const QStringList &lines, CCustomModelItem *parent)
+//{
+//    QList<CCustomModelItem*> parents;
+//    QList<int> indentations;
+//    parents << parent;
+//    indentations << 0;
+
+//    int number = 0;
+
+//    while (number < lines.count()) {
+//        int position = 0;
+//        while (position < lines[number].length()) {
+//            if (lines[number].at(position) != ' ')
+//                break;
+//            ++position;
+//        }
+
+//        QString lineData = lines[number].mid(position).trimmed();
+
+//        if (!lineData.isEmpty()) {
+//            // Read the column data from the rest of the line.
+//            QStringList columnStrings = lineData.split("\t", QString::SkipEmptyParts);
+//            QVector<QVariant> columnData;
+//            for (int column = 0; column < columnStrings.count(); ++column)
+//                columnData << columnStrings[column];
+
+//            if (position > indentations.last()) {
+//                // The last child of the current parent is now the new parent
+//                // unless the current parent has no children.
+
+//                if (parents.last()->childCount() > 0) {
+//                    parents << parents.last()->child(parents.last()->childCount()-1);
+//                    indentations << position;
+//                }
+//            } else {
+//                while (position < indentations.last() && parents.count() > 0) {
+//                    parents.pop_back();
+//                    indentations.pop_back();
+//                }
+//            }
+
+//            // Append a new item to the current parent's list of children.
+//            CCustomModelItem *parent = parents.last();
+//            parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
+//            for (int column = 0; column < columnData.size(); ++column)
+//                parent->child(parent->childCount() - 1)->setData(column, columnData[column]);
+//        }
+
+//        ++number;
+//    }
+//}

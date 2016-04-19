@@ -15,10 +15,12 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     ccustommodel.cpp \
-    ccustommodelitem.cpp
+    ccustommodelitem.cpp \
+    crandomstringmanager.cpp
 
 HEADERS  += mainwindow.h \
     ccustommodel.h \
-    ccustommodelitem.h
+    ccustommodelitem.h \
+    crandomstringmanager.h
 
 FORMS    += mainwindow.ui

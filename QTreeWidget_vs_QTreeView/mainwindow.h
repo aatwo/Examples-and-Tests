@@ -6,6 +6,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "ccustommodel.h"
+#include "crandomstringmanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -43,22 +44,27 @@ class MainWindow : public QMainWindow
         void on_treeView_instantRowsToAddEdit_editingFinished();
         void on_treeView_instantAddButton_clicked();
         void on_treeView_instantClearButton_clicked();
+        void on_treeView_columnCountEdit_editingFinished();
+        void on_treeView_resizeColumnsButton_clicked();
+        void on_treeView_expandAllButton_clicked();
+        void on_treeView_collapseAllButton_clicked();
+        void on_treeView_sctionCountEdit_editingFinished();
 
 
         // Random string slots
         void on_randomStringGenerateButton_clicked();
         void on_randomStringClearButton_clicked();
-
-
         void on_clearLogButton_clicked();
+        void on_randomStringMinLength_editingFinished();
+        void on_randomStringMaxLength_editingFinished();
+        void on_randomStringPrependWithStringEdit_toggled(bool checked);
+        void on_randomStringInjectWithStringEdit_toggled(bool checked);
+        void on_randomStringAppendWithStringEdit_toggled(bool checked);
+        void on_randomStringPrependWithStringValueEdit_textChanged(const QString &arg1);
+        void on_randomStringInjectWithStringValueEdit_textChanged(const QString &arg1);
+        void on_randomStringAppendWithStringValueEdit_textChanged(const QString &arg1);
 
     private:
-
-        // Random functions
-        int RandomNumber( int min, int max );
-        QString RandomString( int length );
-        QString RandomString();
-        QStringList RandomStringList( int stringCount );
 
         // Other functions
         void Log( QString message );
@@ -72,8 +78,7 @@ class MainWindow : public QMainWindow
         QTimer treeViewTimer, treeWidgetTimer;
         int treeWidgetRowCount;
         CCustomModel* treeViewModel;
-
-        QQueue<QString> randomStringQueue;
+        CRandomStringManager* randomStringManager;
 };
 
 #endif // MAINWINDOW_H
