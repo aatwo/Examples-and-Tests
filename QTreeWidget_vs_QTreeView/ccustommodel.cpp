@@ -1,5 +1,6 @@
 #include "ccustommodel.h"
 #include "ccustommodelitem.h"
+#include <QDebug>
 
 CCustomModel::CCustomModel(CRandomStringManager* randomStringManager, const QStringList &headers, int sectionCount, QObject *parent)
     : QAbstractItemModel(parent),
@@ -24,6 +25,28 @@ CCustomModel::~CCustomModel()
     delete rootItem;
 }
 
+void CCustomModel::SetColumnCount(int columnCount)
+{
+    if( columnCount == rootItem->columnCount() )
+        return;
+
+    if( columnCount > rootItem->columnCount() )
+    {
+        for( int i = rootItem->columnCount(); i < columnCount; i++ )
+        {
+            insertColumn( i );
+            setHeaderData( i, Qt::Horizontal, randomStringManager->RandomString() );
+        }
+    }
+    else
+    {
+        for( int i = rootItem->columnCount() - 1; i >= columnCount; i-- )
+        {
+            removeColumn( i );
+        }
+    }
+}
+
 void CCustomModel::SetSectionCount( int count )
 {
     if( count == rootItem->childCount() )
@@ -31,13 +54,19 @@ void CCustomModel::SetSectionCount( int count )
 
     if( count > rootItem->childCount() )
     {
-        for( int i = 0; i < count; i++ )
+        for( int i = rootItem->childCount(); i < count; i++ )
         {
-            int index = rootItem->childCount();
-            insertRow( index );
-
-            for( int j = 0; j < rootItem->columnCount(); j++ )
-                rootItem->child( index )->setData( j, randomStringManager->RandomString() );
+            if( insertRow( i ) )
+            {
+                rootItem->child( i )->setData( 0, QString( "Section %1" ).arg( i + 1 ) );
+            }
+        }
+    }
+    else
+    {
+        for( int i = rootItem->childCount() - 1; i >= count; i-- )
+        {
+            removeRow( i );
         }
     }
 }

@@ -6,6 +6,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "ccustommodel.h"
+#include "ccustommodelitem.h"
 #include "crandomstringmanager.h"
 
 namespace Ui {

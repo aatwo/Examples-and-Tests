@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
         treeViewModel = new CCustomModel( randomStringManager, headers, ui->treeView_sctionCountEdit->value(), ui->treeView );
         ui->treeView->setModel( treeViewModel );
+
+        on_treeView_sctionCountEdit_editingFinished();
     }
 }
 
@@ -245,7 +247,28 @@ void MainWindow::on_treeView_instantRowsToAddEdit_editingFinished()
 
 void MainWindow::on_treeView_instantAddButton_clicked()
 {
+    int rowCount = ui->treeView_instantRowsToAddEdit->value();
+    int sectionIndex = ui->treeView_instantSectionToAddToEdit->value();
 
+    if( sectionIndex == 0 )
+    {
+        sectionIndex = randomStringManager->RandomNumber( 1, ui->treeView_sctionCountEdit->value() );
+    }
+    sectionIndex--;
+
+    if( treeViewModel->insertRows( 0, rowCount, treeViewModel->index( sectionIndex, 0, QModelIndex() ) ) )
+    {
+        QModelIndex sectionModelIndex = treeViewModel->index( sectionIndex, 0, QModelIndex() );
+
+        for( int i = 0; i < rowCount; i++ )
+        {
+            QModelIndex rowModelIndex = sectionModelIndex.child( i, 0 );
+            CCustomModelItem* item = static_cast<CCustomModelItem*>( rowModelIndex.internalPointer() );
+
+            for( int j = 0; j < item->columnCount(); j++ )
+                item->setData( j, randomStringManager->RandomString() );
+        }
+    }
 }
 
 void MainWindow::on_treeView_instantClearButton_clicked()
@@ -254,11 +277,8 @@ void MainWindow::on_treeView_instantClearButton_clicked()
 
 void MainWindow::on_treeView_columnCountEdit_editingFinished()
 {
-    // TODO - set the tree view column count
-
-    //treeViewModel->SetColumnCount( ui->treeView_columnCountEdit->value() );
-    //ui->treeView->setVisible( false );
-    //ui->treeView->setVisible( true );
+    int newColumnCount = ui->treeView_columnCountEdit->value();
+    treeViewModel->SetColumnCount( newColumnCount );
 }
 
 void MainWindow::on_treeView_resizeColumnsButton_clicked()
@@ -282,8 +302,7 @@ void MainWindow::on_treeView_sctionCountEdit_editingFinished()
     int newSectionCount = ui->treeView_sctionCountEdit->value();
     treeViewModel->SetSectionCount( newSectionCount );
 
-    //treeViewModel->SetSectionCount( ui->treeView_sctionCountEdit->value() );
-
+    ui->treeView_instantSectionToAddToEdit->setMaximum( newSectionCount );
     // TODO - set maximum value of instant and timer section to add to values
 }
 

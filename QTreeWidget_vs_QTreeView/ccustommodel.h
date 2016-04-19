@@ -15,6 +15,7 @@ public:
     CCustomModel(CRandomStringManager* randomStringManager, const QStringList &headers, int sectionCount, QObject *parent = 0);
     ~CCustomModel();
 
+    void SetColumnCount( int columnCount );
     void SetSectionCount( int count );
 
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
