@@ -7,14 +7,24 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    treeWidgetRowCount = 0;
-    qsrand( QDateTime::currentMSecsSinceEpoch() );
+    { // Setup TreeWidget
 
-    on_treeWidget_columnCountEdit_editingFinished();
-    on_treeWidget_sectionCountEdit_editingFinished();
-    on_treeWidget_intermittentFrequencyToAddEdit_editingFinished();
+        treeWidgetRowCount = 0;
+        qsrand( QDateTime::currentMSecsSinceEpoch() );
 
-    connect( &treeWidgetTimer, &QTimer::timeout, this, &MainWindow::on_treeWidget_addItemTimerExpired );
+        on_treeWidget_columnCountEdit_editingFinished();
+        on_treeWidget_sectionCountEdit_editingFinished();
+        on_treeWidget_intermittentFrequencyToAddEdit_editingFinished();
+
+        connect( &treeWidgetTimer, &QTimer::timeout, this, &MainWindow::on_treeWidget_addItemTimerExpired );
+    }
+
+    { // Setup TreeView
+
+        treeViewModel = new CCustomModel( ui->treeView );
+        ui->treeView->setModel( treeViewModel );
+
+    }
 }
 
 MainWindow::~MainWindow()
@@ -50,6 +60,11 @@ void MainWindow::on_treeWidget_sectionCountEdit_editingFinished()
         for( int i = currentSectionCount - 1; i >= newSectionCount; i-- )
         {
             QTreeWidgetItem* item = ui->treeWidget->takeTopLevelItem( i );
+            for( int j = item->childCount() - 1; j >= 0; j-- )
+            {
+                QTreeWidgetItem* childItem = item->child( j );
+                delete childItem;
+            }
             delete item;
         }
     }

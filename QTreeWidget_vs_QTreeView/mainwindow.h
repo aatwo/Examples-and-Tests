@@ -5,6 +5,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+#include "ccustommodel.h"
 
 namespace Ui {
 class MainWindow;
@@ -70,6 +71,7 @@ class MainWindow : public QMainWindow
         Ui::MainWindow *ui;
         QTimer treeViewTimer, treeWidgetTimer;
         int treeWidgetRowCount;
+        CCustomModel* treeViewModel;
 
         QQueue<QString> randomStringQueue;
 };
