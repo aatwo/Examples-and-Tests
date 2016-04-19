@@ -49,6 +49,9 @@ class MainWindow : public QMainWindow
         int RandomNumber( int min, int max );
         QString RandomString( int length );
         QString RandomString( int minLength, int maxLength );
+        QStringList RandomStringList( int stringCount, int minStringLength, int maxStringLength );
+        QStringList RandomStringList( int stringCount, int stringLength );
+        QStringList RandomStringList( int stringCount );
 
         Ui::MainWindow *ui;
         QTimer treeViewTimer, treeWidgetTimer;

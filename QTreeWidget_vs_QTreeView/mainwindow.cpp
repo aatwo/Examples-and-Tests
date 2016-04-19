@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     qsrand( QDateTime::currentMSecsSinceEpoch() );
+    on_treeWidget_sectionCountEdit_editingFinished();
 }
 
 MainWindow::~MainWindow()
@@ -51,7 +52,7 @@ void MainWindow::on_treeWidget_sectionCountEdit_editingFinished()
     {
         for( int i = currentSectionCount - 1; i < newSectionCount - 1; i++ )
         {
-            QStringList sectionTitle = QStringList() << QString( "Section %1" ).arg( i + 1 );
+            QStringList sectionTitle = QStringList() << QString( "Section %1" ).arg( i + 2 );
             QTreeWidgetItem* item = new QTreeWidgetItem( sectionTitle );
             ui->treeWidget->addTopLevelItem( item );
         }
@@ -61,6 +62,9 @@ void MainWindow::on_treeWidget_sectionCountEdit_editingFinished()
     {
         ui->treeWidget->resizeColumnToContents( i );
     }
+
+
+    ui->treeWidget_instantSectionToAddToEdit->setMaximum( newSectionCount );
 }
 
 void MainWindow::on_treeWidget_intermittentRowsToAddEdit_editingFinished()
@@ -90,7 +94,19 @@ void MainWindow::on_treeWidget_instantRowsToAddEdit_editingFinished()
 
 void MainWindow::on_treeWidget_instantAddButton_clicked()
 {
+    int rowCount = ui->treeWidget_instantRowsToAddEdit->value();
+    QTreeWidgetItem* sectionItem = ui->treeWidget->topLevelItem( ui->treeWidget_instantSectionToAddToEdit->value() - 1 );
 
+    for( int i = 0; i < rowCount; i++ )
+    {
+        QStringList rowData = RandomStringList( ui->treeWidget->columnCount(), 10, 20 );
+        QTreeWidgetItem* item = new QTreeWidgetItem( rowData );
+
+        sectionItem->addChild( item );
+    }
+
+    for( int i = 0; i < ui->treeWidget->columnCount(); i++ )
+        ui->treeWidget->resizeColumnToContents( i );
 }
 
 void MainWindow::on_treeWidget_instantClearButton_clicked()
@@ -172,4 +188,40 @@ QString MainWindow::RandomString(int minLength, int maxLength)
 {
     int length = RandomNumber( minLength, maxLength );
     return RandomString( length );
+}
+
+QStringList MainWindow::RandomStringList(int stringCount, int minStringLength, int maxStringLength)
+{
+    QStringList ret;
+
+    for( int i = 0; i < stringCount; i++ )
+    {
+        ret.append( RandomString( minStringLength, maxStringLength ) );
+    }
+
+    return ret;
+}
+
+QStringList MainWindow::RandomStringList(int stringCount, int stringLength)
+{
+    QStringList ret;
+
+    for( int i = 0; i < stringCount; i++ )
+    {
+        ret.append( RandomString( stringLength ) );
+    }
+
+    return ret;
+}
+
+QStringList MainWindow::RandomStringList(int stringCount)
+{
+    QStringList ret;
+
+    for( int i = 0; i < stringCount; i++ )
+    {
+        ret.append( RandomString( 15 ) );
+    }
+
+    return ret;
 }

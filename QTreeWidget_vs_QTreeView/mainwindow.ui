@@ -190,17 +190,7 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QSpinBox" name="treeWidget_instantRowsToAddEdit">
-             <property name="minimum">
-              <number>1</number>
-             </property>
-             <property name="maximum">
-              <number>999999999</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="2">
+           <item row="4" column="0" colspan="2">
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
               <spacer name="horizontalSpacer_4">
@@ -223,6 +213,33 @@
               </widget>
              </item>
             </layout>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="treeWidget_instantRowsToAddEdit">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>999999999</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>Section to add to:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="treeWidget_instantSectionToAddToEdit">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>1</number>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -265,7 +282,11 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QSpinBox" name="treeWidget_sectionCountEdit"/>
+            <widget class="QSpinBox" name="treeWidget_sectionCountEdit">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
