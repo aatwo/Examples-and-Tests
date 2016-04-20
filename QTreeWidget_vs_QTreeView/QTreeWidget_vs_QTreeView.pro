@@ -16,11 +16,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     ccustommodel.cpp \
     ccustommodelitem.cpp \
-    crandomstringmanager.cpp
+    crandomstringmanager.cpp \
+    cfiltergroup.cpp \
+    cfilteritem.cpp
 
 HEADERS  += mainwindow.h \
     ccustommodel.h \
     ccustommodelitem.h \
-    crandomstringmanager.h
+    crandomstringmanager.h \
+    cfiltergroup.h \
+    cfilteritem.h
 
 FORMS    += mainwindow.ui

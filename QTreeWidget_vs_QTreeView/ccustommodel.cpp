@@ -25,6 +25,27 @@ CCustomModel::~CCustomModel()
     delete rootItem;
 }
 
+void CCustomModel::Clear()
+{
+    for( int i = 0; i < rootItem->childCount(); i++ )
+    {
+        QModelIndex sectionIndex = index( i, 0, QModelIndex() );
+        if( !sectionIndex.isValid() )
+            return;
+
+        CCustomModelItem* item = static_cast<CCustomModelItem*>( sectionIndex.internalPointer() );
+        if( !item )
+            return;
+
+        int rowCount = item->childCount();
+
+        if( rowCount )
+        {
+            removeRows( 0, rowCount, sectionIndex );
+        }
+    }
+}
+
 void CCustomModel::SetColumnCount(int columnCount)
 {
     if( columnCount == rootItem->columnCount() )

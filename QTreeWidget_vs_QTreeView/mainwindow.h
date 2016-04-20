@@ -8,6 +8,7 @@
 #include "ccustommodel.h"
 #include "ccustommodelitem.h"
 #include "crandomstringmanager.h"
+#include "cfiltergroup.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,7 +26,6 @@ class MainWindow : public QMainWindow
         // TreeWidget slots
         void on_treeWidget_columnCountEdit_editingFinished();
         void on_treeWidget_sectionCountEdit_editingFinished();
-        void on_treeWidget_intermittentRowsToAddEdit_editingFinished();
         void on_treeWidget_intermittentFrequencyToAddEdit_editingFinished();
         void on_treeWidget_intermittentStartButton_clicked();
         void on_treeWidget_intermittentStopButton_clicked();
@@ -35,21 +35,28 @@ class MainWindow : public QMainWindow
         void on_treeWidget_addItemTimerExpired();
         void on_treeWidget_expandAllButton_clicked();
         void on_treeWidget_collapseAllButton_clicked();
+        void on_treeWidget_addFilterButton_clicked();
+        void on_treeWidget_clearFiltersButton_clicked();
+        void on_treeWidget_FiltersChanged();
+        void on_treeWidget_allowSortingEdit_toggled(bool checked);
 
 
         // TreeView slots
-        void on_treeView_intermittentRowsToAddEdit_editingFinished();
         void on_treeView_intermittentFrequencyToAddEdit_editingFinished();
         void on_treeView_intermittentStartButton_clicked();
         void on_treeView_intermittentStopButton_clicked();
-        void on_treeView_instantRowsToAddEdit_editingFinished();
         void on_treeView_instantAddButton_clicked();
         void on_treeView_instantClearButton_clicked();
         void on_treeView_columnCountEdit_editingFinished();
         void on_treeView_resizeColumnsButton_clicked();
+        void on_treeView_addItemTimerExpired();
         void on_treeView_expandAllButton_clicked();
         void on_treeView_collapseAllButton_clicked();
         void on_treeView_sctionCountEdit_editingFinished();
+        void on_treeView_clearFiltersButton_clicked();
+        void on_treeView_addFilterButton_clicked();
+        void on_treeView_FiltersChanged();
+        void on_treeView_sortingEnabledEdit_toggled(bool checked);
 
 
         // Random string slots
@@ -58,12 +65,18 @@ class MainWindow : public QMainWindow
         void on_clearLogButton_clicked();
         void on_randomStringMinLength_editingFinished();
         void on_randomStringMaxLength_editingFinished();
-        void on_randomStringPrependWithStringEdit_toggled(bool checked);
-        void on_randomStringInjectWithStringEdit_toggled(bool checked);
-        void on_randomStringAppendWithStringEdit_toggled(bool checked);
-        void on_randomStringPrependWithStringValueEdit_textChanged(const QString &arg1);
-        void on_randomStringInjectWithStringValueEdit_textChanged(const QString &arg1);
-        void on_randomStringAppendWithStringValueEdit_textChanged(const QString &arg1);
+        void on_randomStringPrependWithStringEdit_toggled(bool);
+        void on_randomStringInjectWithStringEdit_toggled(bool);
+        void on_randomStringAppendWithStringEdit_toggled(bool);
+        void on_randomStringPrependWithStringValueEdit_textChanged(const QString &);
+        void on_randomStringInjectWithStringValueEdit_textChanged(const QString &);
+        void on_randomStringAppendWithStringValueEdit_textChanged(const QString &);
+
+
+
+
+
+
 
     private:
 
@@ -73,11 +86,16 @@ class MainWindow : public QMainWindow
         void ClearStatus();
         void UpdateRandomStringCountLabel();
         void UpdateTreeWidgetRowCountLabel();
-
+        void UpdateTreeViewRowCountLabel();
+        bool IsTreeWidgetItemVisible( CFilterGroup::FilterGroupDescription& filterDescriptions_in, QTreeWidgetItem* item );
+        void UpdateVisibleTreeWidgetRowCount();
 
         Ui::MainWindow *ui;
         QTimer treeViewTimer, treeWidgetTimer;
-        int treeWidgetRowCount;
+        QElapsedTimer treeViewElapsedTimer, treeWidgetElapsedTimer;
+        int treeWidgetRowCount, treeViewRowCount;
+        int treeWidgetVisibleRowCount;
+        CFilterGroup* treeWidgetFilterGroup, *treeViewFilterGroup;
         CCustomModel* treeViewModel;
         CRandomStringManager* randomStringManager;
 };
