@@ -47,9 +47,9 @@ public:
 
 private:
     //void setupModelData(const QStringList &lines, CCustomModelItem *parent);
-    CCustomModelItem *getItem(const QModelIndex &index) const;
+    CCustomModelItem* getItem(const QModelIndex &index) const;
 
-    CCustomModelItem *rootItem;
+    CCustomModelItem* rootItem;
     CRandomStringManager* randomStringManager;
 };
 

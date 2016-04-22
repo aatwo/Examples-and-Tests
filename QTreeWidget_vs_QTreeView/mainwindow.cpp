@@ -42,7 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->treeView_filterScrollArea->setWidgetResizable( true );
 
         treeViewModel = new CCustomModel( randomStringManager, headers, ui->treeView_sctionCountEdit->value(), ui->treeView );
-        ui->treeView->setModel( treeViewModel );
+        treeViewProxyModel = new CCustomSortFilterProxyModel( treeViewModel, ui->treeView );
+        ui->treeView->setModel( treeViewProxyModel );
 
         on_treeView_sctionCountEdit_editingFinished();
 
@@ -130,19 +131,16 @@ void MainWindow::on_treeWidget_intermittentStopButton_clicked()
 
 void MainWindow::on_treeWidget_instantAddButton_clicked()
 {
-    QElapsedTimer timer;
-    timer.start();
-
     int rowCount = ui->treeWidget_instantRowsToAddEdit->value();
     int columnCount = ui->treeWidget->columnCount();
     int requiredStringCount = rowCount * columnCount;
 
     if( requiredStringCount > randomStringManager->RandomStringCount() )
     {
-        Log( QString( "Warning: string queue too small. %1 random strings will be generated..." ).arg( requiredStringCount - randomStringManager->RandomStringCount() ) );
+        LogNewLine( QString( " <font color=\"Red\">Warning: string queue too small. %1 random strings will be generated</font>" ).arg( requiredStringCount - randomStringManager->RandomStringCount() ) );
     }
 
-    SetStatus( QString ( "Adding %1 rows of data (%2 data items)..." ).arg( rowCount ).arg( requiredStringCount ) );
+    AutoLogger log( this, QString ( "TreeWidget: Adding %1 rows of data (%2 data items)" ).arg( rowCount ).arg( requiredStringCount ) );
 
     int sectionValue = ui->treeWidget_instantSectionToAddToEdit->value();
     if( !sectionValue )
@@ -151,7 +149,7 @@ void MainWindow::on_treeWidget_instantAddButton_clicked()
     sectionValue = sectionValue - 1;
     QTreeWidgetItem* sectionItem = ui->treeWidget->topLevelItem( sectionValue );
 
-    CFilterGroup::FilterGroupDescription filters = treeWidgetFilterGroup->GetFilterGroupDescription();
+    common::FilterGroupDescription filters = treeWidgetFilterGroup->GetFilterGroupDescription();
 
     int newRowVisibleCount = 0;
     for( int i = 0; i < rowCount; i++ )
@@ -167,19 +165,17 @@ void MainWindow::on_treeWidget_instantAddButton_clicked()
             newRowVisibleCount++;
     }
 
-    qint64 msElapsed = timer.elapsed();
-    Log( QString( "Finished adding data to the tree widget %1 ms" ).arg( msElapsed ) );
-
     treeWidgetVisibleRowCount += newRowVisibleCount;
     treeWidgetRowCount += rowCount;
     UpdateTreeWidgetRowCountLabel();
     UpdateRandomStringCountLabel();
     UpdateVisibleTreeWidgetRowCount();
-    ClearStatus();
 }
 
 void MainWindow::on_treeWidget_resizeColumnsButton_clicked()
 {
+    AutoLogger log( this, QString( "TreeWidget: Resizing %1 columns" ).arg( treeViewModel->columnCount() ) );
+
     for( int i = 0; i < ui->treeWidget->columnCount(); i++ )
         ui->treeWidget->resizeColumnToContents( i );
 }
@@ -206,20 +202,16 @@ void MainWindow::on_treeWidget_addItemTimerExpired()
 {
     qint64 timerSinceLastCall = treeWidgetElapsedTimer.elapsed();
 
-    QElapsedTimer timer;
-    timer.start();
-
     int rowCount = ui->treeWidget_intermittentRowsToAddEdit->value();
     int columnCount = ui->treeWidget->columnCount();
     int requireddStringCount = rowCount * columnCount;
 
     if( requireddStringCount > randomStringManager->RandomStringCount() )
     {
-        Log( QString( "Warning: string queue too small. %1 random strings will be generated..." ).arg( requireddStringCount - randomStringManager->RandomStringCount() ) );
+        LogNewLine( QString( " <font color=\"Red\">Warning: string queue too small. %1 random strings will be generated</font>" ).arg( requireddStringCount - randomStringManager->RandomStringCount() ) );
     }
 
-    SetStatus( QString ( "Adding %1 rows of data (%2 data items)..." ).arg( rowCount ).arg( requireddStringCount ) );
-    Log( QString( "Interval: %1 ms (%2 ms target)" ).arg( timerSinceLastCall ).arg( treeWidgetTimer.interval() ) );
+    AutoLogger log( this, QString ( "TreeWidget: Adding %1 rows of data (%2 data items) : %3 ms / %4 ms" ).arg( rowCount ).arg( requireddStringCount ).arg( timerSinceLastCall ).arg( treeWidgetTimer.interval() ) );
 
     int sectionValue = ui->treeWidget_intermittentSectionToAddToValueEdit->value();
     if( !sectionValue )
@@ -227,7 +219,7 @@ void MainWindow::on_treeWidget_addItemTimerExpired()
 
     sectionValue = sectionValue - 1;
     QTreeWidgetItem* sectionItem = ui->treeWidget->topLevelItem( sectionValue );
-    CFilterGroup::FilterGroupDescription filters = treeWidgetFilterGroup->GetFilterGroupDescription();
+    common::FilterGroupDescription filters = treeWidgetFilterGroup->GetFilterGroupDescription();
 
     int newVisibleRowCount = 0;
     for( int i = 0; i < rowCount; i++ )
@@ -244,15 +236,11 @@ void MainWindow::on_treeWidget_addItemTimerExpired()
             newVisibleRowCount++;
     }
 
-    qint64 msElapsed = timer.elapsed();
-    Log( QString( "Finished adding data to the tree widget %1 ms" ).arg( msElapsed ) );
-
     treeWidgetVisibleRowCount += newVisibleRowCount;
     treeWidgetRowCount += rowCount;
     UpdateTreeWidgetRowCountLabel();
     UpdateRandomStringCountLabel();
     UpdateVisibleTreeWidgetRowCount();
-    ClearStatus();
 
     treeWidgetElapsedTimer.restart();
 }
@@ -279,13 +267,10 @@ void MainWindow::on_treeWidget_clearFiltersButton_clicked()
 
 void MainWindow::on_treeWidget_FiltersChanged()
 {
-    QElapsedTimer timer;
-    timer.start();
-
-    CFilterGroup::FilterGroupDescription filterDescriptions = treeWidgetFilterGroup->GetFilterGroupDescription();
+    common::FilterGroupDescription filterDescriptions = treeWidgetFilterGroup->GetFilterGroupDescription();
     int filterCount = filterDescriptions.filterItemDescriptions.size();
 
-    SetStatus( QString( "Filtering the treeWidget (%1 filters to apply with %2 comparisons to make)..." ).arg( filterCount ).arg( filterCount * treeWidgetRowCount ) );
+    AutoLogger log( this, QString( "TreeWidget: Filtering data (%1 filters to apply with %2 comparisons to make)" ).arg( filterCount ).arg( filterCount * treeWidgetRowCount ) );
 
     treeWidgetVisibleRowCount = 0;
     for( int i = 0; i < ui->treeWidget->topLevelItemCount(); i++ )
@@ -302,14 +287,13 @@ void MainWindow::on_treeWidget_FiltersChanged()
         }
     }
 
-    qint64 elapsedMs = timer.elapsed();
-    Log( QString( "Finished filtering treeWidget in %1 ms" ).arg( elapsedMs ) );
-
     UpdateVisibleTreeWidgetRowCount();
+    ClearStatus();
 }
 
 void MainWindow::on_treeWidget_allowSortingEdit_toggled(bool checked)
 {
+    AutoLogger log( this, "TreeWidget: Sorting" );
     ui->treeWidget->setSortingEnabled( checked );
 }
 
@@ -340,47 +324,47 @@ void MainWindow::on_treeView_intermittentStopButton_clicked()
 
 void MainWindow::on_treeView_instantAddButton_clicked()
 {
-    QElapsedTimer timer;
-    timer.start();
-
-    int rowCount = ui->treeView_instantRowsToAddEdit->value();
-    int sectionIndex = ui->treeView_instantSectionToAddToEdit->value();
-    int requiredStringCount = rowCount * treeViewModel->columnCount();
-
-    if( requiredStringCount > randomStringManager->RandomStringCount() )
     {
-        Log( QString( "Warning: string queue too small. %1 random strings will be generated..." ).arg( requiredStringCount - randomStringManager->RandomStringCount() ) );
-    }
+        int rowCount = ui->treeView_instantRowsToAddEdit->value();
+        int sectionIndex = ui->treeView_instantSectionToAddToEdit->value();
+        int requiredStringCount = rowCount * treeViewModel->columnCount();
 
-    SetStatus( QString ( "Adding %1 rows of data (%2 data items)..." ).arg( rowCount ).arg( requiredStringCount ) );
-
-    if( sectionIndex == 0 )
-    {
-        sectionIndex = randomStringManager->RandomNumber( 1, ui->treeView_sctionCountEdit->value() );
-    }
-    sectionIndex--;
-
-    if( treeViewModel->insertRows( 0, rowCount, treeViewModel->index( sectionIndex, 0, QModelIndex() ) ) )
-    {
-        QModelIndex sectionModelIndex = treeViewModel->index( sectionIndex, 0, QModelIndex() );
-
-        for( int i = 0; i < rowCount; i++ )
+        if( requiredStringCount > randomStringManager->RandomStringCount() )
         {
-            QModelIndex rowModelIndex = sectionModelIndex.child( i, 0 );
-            CCustomModelItem* item = static_cast<CCustomModelItem*>( rowModelIndex.internalPointer() );
-
-            for( int j = 0; j < item->columnCount(); j++ )
-                item->setData( j, randomStringManager->RandomString() );
+            LogNewLine( QString( " <font color=\"Red\">Warning: string queue too small. %1 random strings will be generated</font>" ).arg( requiredStringCount - randomStringManager->RandomStringCount() ) );
         }
+
+        AutoLogger log( this, QString ( "TreeView: Adding %1 rows of data (%2 data items)" ).arg( rowCount ).arg( requiredStringCount ) );
+
+        if( sectionIndex == 0 )
+        {
+            sectionIndex = randomStringManager->RandomNumber( 1, ui->treeView_sctionCountEdit->value() );
+        }
+        sectionIndex--;
+
+        if( treeViewModel->insertRows( 0, rowCount, treeViewModel->index( sectionIndex, 0, QModelIndex() ) ) )
+        {
+            QModelIndex sectionModelIndex = treeViewModel->index( sectionIndex, 0, QModelIndex() );
+
+            for( int i = 0; i < rowCount; i++ )
+            {
+                QModelIndex rowModelIndex = sectionModelIndex.child( i, 0 );
+                CCustomModelItem* item = static_cast<CCustomModelItem*>( rowModelIndex.internalPointer() );
+
+                for( int j = 0; j < item->columnCount(); j++ )
+                    item->setData( j, randomStringManager->RandomString() );
+            }
+        }
+
+        treeViewRowCount += rowCount;
+        UpdateTreeViewRowCountLabel();
+        UpdateRandomStringCountLabel();
     }
 
-    qint64 msElapsed = timer.elapsed();
-    Log( QString( "Finished adding data to the tree widget %1 ms" ).arg( msElapsed ) );
-
-    treeViewRowCount += rowCount;
-    UpdateTreeViewRowCountLabel();
-    UpdateRandomStringCountLabel();
-    ClearStatus();
+    {
+        AutoLogger log( this, QString( "Sorting and and filtering tree view" ) );
+        treeViewProxyModel->invalidate();
+    }
 }
 
 void MainWindow::on_treeView_instantClearButton_clicked()
@@ -401,57 +385,58 @@ void MainWindow::on_treeView_columnCountEdit_editingFinished()
 
 void MainWindow::on_treeView_resizeColumnsButton_clicked()
 {
-    for( int i = 0; i < ui->treeView->model()->columnCount(); i++ )
+    AutoLogger log( this, QString( "TreeView: Resizing %1 columns to fit the contents" ).arg( treeViewModel->columnCount() ) );
+
+    for( int i = 0; i < treeViewModel->columnCount(); i++ )
         ui->treeView->resizeColumnToContents( i );
 }
 
 void MainWindow::on_treeView_addItemTimerExpired()
 {
-    qint64 timeSinceLastCall = treeViewElapsedTimer.elapsed();
-
-    QElapsedTimer timer;
-    timer.start();
-
-    int rowCount = ui->treeView_intermittentRowsToAddEdit->value();
-    int sectionIndex = ui->treeView_intermittentSectionToAddToValueEdit->value();
-    int requiredStringCount = rowCount * treeViewModel->columnCount();
-
-    if( requiredStringCount > randomStringManager->RandomStringCount() )
     {
-        Log( QString( "Warning: string queue too small. %1 random strings will be generated..." ).arg( requiredStringCount - randomStringManager->RandomStringCount() ) );
-    }
+        qint64 timeSinceLastCall = treeViewElapsedTimer.elapsed();
 
-    SetStatus( QString ( "Adding %1 rows of data (%2 data items)..." ).arg( rowCount ).arg( requiredStringCount ) );
-    Log( QString( "Interval: %1 ms (%2 ms target)" ).arg( timeSinceLastCall ).arg( treeViewTimer.interval() ) );
+        int rowCount = ui->treeView_intermittentRowsToAddEdit->value();
+        int sectionIndex = ui->treeView_intermittentSectionToAddToValueEdit->value();
+        int requiredStringCount = rowCount * treeViewModel->columnCount();
 
-    if( sectionIndex == 0 )
-    {
-        sectionIndex = randomStringManager->RandomNumber( 1, ui->treeView_sctionCountEdit->value() );
-    }
-    sectionIndex--;
-
-    if( treeViewModel->insertRows( 0, rowCount, treeViewModel->index( sectionIndex, 0, QModelIndex() ) ) )
-    {
-        QModelIndex sectionModelIndex = treeViewModel->index( sectionIndex, 0, QModelIndex() );
-
-        for( int i = 0; i < rowCount; i++ )
+        if( requiredStringCount > randomStringManager->RandomStringCount() )
         {
-            QModelIndex rowModelIndex = sectionModelIndex.child( i, 0 );
-            CCustomModelItem* item = static_cast<CCustomModelItem*>( rowModelIndex.internalPointer() );
-
-            for( int j = 0; j < item->columnCount(); j++ )
-                item->setData( j, randomStringManager->RandomString() );
+            LogNewLine( QString( " <font color=\"Red\">Warning: string queue too small. %1 random strings will be generated</font>" ).arg( requiredStringCount - randomStringManager->RandomStringCount() ) );
         }
+
+        AutoLogger log( this, QString ( "TreeView: Adding %1 rows of data (%2 data items) : %3 ms / %4 ms" ).arg( rowCount ).arg( requiredStringCount ).arg( timeSinceLastCall ).arg( treeViewTimer.interval() ) );
+
+        if( sectionIndex == 0 )
+        {
+            sectionIndex = randomStringManager->RandomNumber( 1, ui->treeView_sctionCountEdit->value() );
+        }
+        sectionIndex--;
+
+        if( treeViewModel->insertRows( 0, rowCount, treeViewModel->index( sectionIndex, 0, QModelIndex() ) ) )
+        {
+            QModelIndex sectionModelIndex = treeViewModel->index( sectionIndex, 0, QModelIndex() );
+
+            for( int i = 0; i < rowCount; i++ )
+            {
+                QModelIndex rowModelIndex = sectionModelIndex.child( i, 0 );
+                CCustomModelItem* item = static_cast<CCustomModelItem*>( rowModelIndex.internalPointer() );
+
+                for( int j = 0; j < item->columnCount(); j++ )
+                    item->setData( j, randomStringManager->RandomString() );
+            }
+        }
+
+        treeViewRowCount += rowCount;
+        UpdateTreeViewRowCountLabel();
+        UpdateRandomStringCountLabel();
+        ClearStatus();
     }
 
-    qint64 msElapsed = timer.elapsed();
-    Log( QString( "Finished adding data to the tree widget %1 ms" ).arg( msElapsed ) );
-
-    treeViewRowCount += rowCount;
-    UpdateTreeViewRowCountLabel();
-    UpdateRandomStringCountLabel();
-    ClearStatus();
-
+    {
+        AutoLogger log( this, QString( "Sorting and and filtering tree view" ) );
+        treeViewProxyModel->invalidate();
+    }
     treeViewElapsedTimer.restart();
 }
 
@@ -486,24 +471,36 @@ void MainWindow::on_treeView_addFilterButton_clicked()
 
 void MainWindow::on_treeView_FiltersChanged()
 {
-    // TODO
-    qDebug() << "TODO - apply the filter";
+    AutoLogger log( this, QString( "TreeView: Filtering" ) );
+    treeViewProxyModel->SetFilters( treeViewFilterGroup->GetFilterGroupDescription() );
 }
 
 void MainWindow::on_treeView_sortingEnabledEdit_toggled(bool checked)
 {
+    AutoLogger log( this, "TreeView: Sorting" );
     ui->treeView->setSortingEnabled( checked );
 }
 
 void MainWindow::Log(QString message)
 {
     if( ui->logStateEdit->isChecked() )
-        ui->log->appendPlainText( message );
+    {
+        ui->log->textCursor().insertHtml( message );
+        ui->log->verticalScrollBar()->setValue( ui->log->verticalScrollBar()->maximum() );
+    }
+}
+
+void MainWindow::LogNewLine(QString message)
+{
+    if( ui->logStateEdit->isChecked() )
+    {
+        ui->log->appendHtml( message );
+        ui->log->verticalScrollBar()->setValue( ui->log->verticalScrollBar()->maximum() );
+    }
 }
 
 void MainWindow::SetStatus(QString status)
 {
-    Log( status );
     statusBar()->showMessage( status );
 }
 
@@ -527,7 +524,7 @@ void MainWindow::UpdateTreeViewRowCountLabel()
     ui->treeView_rowCountLabel->setText( QString::number( treeViewRowCount ) );
 }
 
-bool MainWindow::IsTreeWidgetItemVisible(CFilterGroup::FilterGroupDescription& filterDescriptions_in, QTreeWidgetItem* item)
+bool MainWindow::IsTreeWidgetItemVisible(common::FilterGroupDescription& filterDescriptions_in, QTreeWidgetItem* item)
 {
     bool rowVisible = true;
 
@@ -553,11 +550,8 @@ void MainWindow::UpdateVisibleTreeWidgetRowCount()
 
 void MainWindow::on_randomStringGenerateButton_clicked()
 {
-    QElapsedTimer timer;
-    timer.start();
-
     int generateCount = ui->randomStringGenerationCount->value();
-    SetStatus( QString ( "Generating %1 random strings..." ).arg( generateCount ) );
+    AutoLogger log( this, QString ( "Generating %1 random strings" ).arg( generateCount ) );
 
     for( int i = 0; i < generateCount; i++ )
     {
@@ -569,11 +563,7 @@ void MainWindow::on_randomStringGenerateButton_clicked()
         randomStringManager->AppendRandomString( randomStringManager->RandomString( length ) );
     }
 
-    qint64 msElapsed = timer.elapsed();
-    Log( QString( "Finished generating random strings in %1 ms" ).arg( msElapsed ) );
-
     UpdateRandomStringCountLabel();
-    ClearStatus();
 }
 
 void MainWindow::on_randomStringClearButton_clicked()

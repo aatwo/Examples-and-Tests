@@ -18,13 +18,17 @@ SOURCES += main.cpp\
     ccustommodelitem.cpp \
     crandomstringmanager.cpp \
     cfiltergroup.cpp \
-    cfilteritem.cpp
+    cfilteritem.cpp \
+    ccustomsortfilterproxymodel.cpp \
+    ccommon.cpp
 
 HEADERS  += mainwindow.h \
     ccustommodel.h \
     ccustommodelitem.h \
     crandomstringmanager.h \
     cfiltergroup.h \
-    cfilteritem.h
+    cfilteritem.h \
+    ccustomsortfilterproxymodel.h \
+    ccommon.h
 
 FORMS    += mainwindow.ui

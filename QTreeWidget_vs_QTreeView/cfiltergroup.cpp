@@ -28,9 +28,9 @@ void CFilterGroup::Clear()
     emit FiltersChanged();
 }
 
-CFilterGroup::FilterGroupDescription CFilterGroup::GetFilterGroupDescription()
+common::FilterGroupDescription CFilterGroup::GetFilterGroupDescription()
 {
-    FilterGroupDescription ret;
+    common::FilterGroupDescription ret;
 
     for( CFilterItem* item : filterItems )
     {

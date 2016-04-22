@@ -9,6 +9,7 @@
 #include "ccustommodelitem.h"
 #include "crandomstringmanager.h"
 #include "cfiltergroup.h"
+#include "ccustomsortfilterproxymodel.h"
 
 namespace Ui {
 class MainWindow;
@@ -16,6 +17,7 @@ class MainWindow;
 
 class MainWindow : public QMainWindow
 {
+    friend class AutoLogger;
     Q_OBJECT
     public:
         explicit MainWindow(QWidget *parent = 0);
@@ -74,21 +76,54 @@ class MainWindow : public QMainWindow
 
 
 
-
-
-
-
     private:
 
         // Other functions
         void Log( QString message );
+        void LogNewLine( QString message );
         void SetStatus( QString status );
         void ClearStatus();
         void UpdateRandomStringCountLabel();
         void UpdateTreeWidgetRowCountLabel();
         void UpdateTreeViewRowCountLabel();
-        bool IsTreeWidgetItemVisible( CFilterGroup::FilterGroupDescription& filterDescriptions_in, QTreeWidgetItem* item );
+        bool IsTreeWidgetItemVisible( common::FilterGroupDescription& filterDescriptions_in, QTreeWidgetItem* item );
         void UpdateVisibleTreeWidgetRowCount();
+
+
+        class AutoLogger
+        {
+            // Don't judge me, I'm lazy :D
+            public:
+                AutoLogger( MainWindow* window, QString message )
+                {
+                    this->window = window;
+                    timer.start();
+
+                    window->LogNewLine( "<font color=\"Black\">" + message + "...</font>" );
+                    window->SetStatus( message + "..." );
+                }
+
+                ~AutoLogger()
+                {
+                    window->ClearStatus();
+
+                    qint64 durationMs = timer.elapsed();
+                    double seconds = static_cast<double>( durationMs ) / 1000.0;
+
+                    QString timeColour = "Green";
+                    if( durationMs > 1000 )
+                        timeColour = "Red";
+                    else if( durationMs > 300 )
+                        timeColour = "Orange";
+
+                    window->Log( QString( " <font color=\"%3\">Finished in %1 ms / %2 seconds</font>" ).arg( timer.elapsed() ).arg( seconds ).arg( timeColour ) );
+                }
+
+            private:
+                MainWindow* window;
+                QElapsedTimer timer;
+        };
+
 
         Ui::MainWindow *ui;
         QTimer treeViewTimer, treeWidgetTimer;
@@ -97,6 +132,7 @@ class MainWindow : public QMainWindow
         int treeWidgetVisibleRowCount;
         CFilterGroup* treeWidgetFilterGroup, *treeViewFilterGroup;
         CCustomModel* treeViewModel;
+        CCustomSortFilterProxyModel* treeViewProxyModel;
         CRandomStringManager* randomStringManager;
 };
 

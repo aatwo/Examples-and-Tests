@@ -4,21 +4,17 @@
 #include <QtCore>
 #include <QtWidgets>
 #include "cfilteritem.h"
+#include "ccommon.h"
 
 class CFilterGroup : public QWidget
 {
     Q_OBJECT
     public:
 
-        struct FilterGroupDescription
-        {
-            QList< QPair<int, QString> > filterItemDescriptions; // Pairs of columns and filter-values
-        };
-
         explicit CFilterGroup(QWidget *parent = 0);
 
         void Clear();
-        FilterGroupDescription GetFilterGroupDescription();
+        common::FilterGroupDescription GetFilterGroupDescription();
 
 
     signals:
