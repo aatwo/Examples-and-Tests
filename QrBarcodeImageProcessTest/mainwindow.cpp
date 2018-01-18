@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QElapsedTimer>
 #include <QZXing.h>
 
 
@@ -28,8 +29,12 @@ MainWindow::MainWindow( QWidget* parent ) :
     QImage image = imageList[ 0 ].image;
     imageLabel->setImage( image );
 
+    QMenu*      mainMenu        = menuBar()->addMenu( "Actions" );
+    QAction*    processAction   = mainMenu->addAction( "Process" );
+
     connect( ui->loadButton, &QPushButton::clicked, this, &MainWindow::onLoadButtonPressed );
     connect( ui->imageCombo, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &MainWindow::onImageComboIndexChanged );
+    connect( processAction, &QAction::triggered, this, &MainWindow::onProcessButtonPressed );
     connect( ui->processButton, &QPushButton::clicked, this, &MainWindow::onProcessButtonPressed );
 }
 
@@ -47,6 +52,8 @@ void MainWindow::onImageComboIndexChanged( int index )
 void MainWindow::onProcessButtonPressed()
 {
     log( "Processing..." );
+    QElapsedTimer t;
+    t.start();
 
     QImage image = imageList[ ui->imageCombo->currentIndex() ].image;
     QZXing decoder;
@@ -63,6 +70,11 @@ void MainWindow::onProcessButtonPressed()
         log( "Empty output..." );
         ui->output->setText( "Empty output..." );
     }
+
+    qint64 elapsedMS = t.elapsed();
+    QString message = QString( "Elapsed ms: %1" ).arg( elapsedMS );
+    log( message );
+    statusBar()->showMessage( message );
 }
 
 void MainWindow::onLoadButtonPressed()
