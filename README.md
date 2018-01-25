@@ -1,2 +1,2 @@
-# TestProjects
-Contains small test projects for investigative purposes.
+# Examples and Tests
+A collection of examples and tests for various things in various languages.
