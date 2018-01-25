@@ -1,0 +1,2 @@
+OtherImageFormats: 06_extension_libraries_and_loading_other_image_formats.cpp
+	g++ -o ../06ExtensionLibrariesAndOtherImageFormats 06_extension_libraries_and_loading_other_image_formats.cpp -lSDL2 -lSDL2_image
