@@ -42,14 +42,5 @@ FORMS += \
         mainwindow.ui
 
 
-#LIBS += -L$$PWD/opencv/x64/vc15/staticlib -lopencv_core340d \
-#        -L$$PWD/opencv/x64/vc15/staticlib -lippicvmt \
-#        -L$$PWD/opencv/x64/vc15/staticlib -lippiwd \
-#        -L$$PWD/opencv/x64/vc15/staticlib -littnotifyd \
-#        -L$$PWD/opencv/x64/vc15/staticlib -lopencv_imgproc340d \
-#        -L$$PWD/opencv/x64/vc15/staticlib -lzlibd \
-#        -lWs2_32 \
-#        -lUser32
-
 RESOURCES += \
     resources.qrc
