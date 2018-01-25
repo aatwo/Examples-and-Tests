@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Resources/circleShape.png</file>
+        <file>Resources/ragdoll.png</file>
+        <file>Resources/randomShape.png</file>
+        <file>Resources/standardShape.png</file>
+        <file>Resources/zoomIn.png</file>
+        <file>Resources/zoomOut.png</file>
+        <file>Resources/done.png</file>
+        <file>Resources/restart.png</file>
+        <file>Resources/cancel.png</file>
+        <file>Resources/edge.png</file>
+        <file>Resources/lock.png</file>
+        <file>Resources/pause.png</file>
+    </qresource>
+</RCC>
