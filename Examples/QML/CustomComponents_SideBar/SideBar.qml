@@ -8,9 +8,13 @@ MouseArea
     property int maxBarWidth: 300
 
     id: sideBarId
-    x: -privates.maxWidth + ( privates.progress * privates.maxWidth )
-    width: privates.maxWidth
+    state: "CLOSED"
+
+    //x: privates.progress > 0.0
+    //width: parent.width
     height: parent.height
+    x: -privates.maxWidth + ( privates.realProgress * privates.maxWidth )
+    width: privates.maxWidth
 
     function isOpen()
     {
@@ -22,11 +26,8 @@ MouseArea
         if( privates.isOpen )
             return
 
-        if( closeAnimationId.running )
-            closeAnimationId.stop()
-
-        openAnimationId.start()
         privates.isOpen = true
+        sideBarId.state = "OPEN"
 
         print( "Side bar opening..." )
     }
@@ -36,11 +37,9 @@ MouseArea
         if( !privates.isOpen )
             return
 
-        if( openAnimationId.running )
-            openAnimationId.stop()
-
-        closeAnimationId.start()
         privates.isOpen = false
+        sideBarId.state = "CLOSED"
+
         print( "Side bar closing..." )
     }
 
@@ -48,12 +47,12 @@ MouseArea
     {
         id: privates
 
+        property int maxWidth: Math.min( sideBarId.maxBarWidth, sideBarId.parent.width )
+        property int progress: 0
+        property int progressMax: 1000
+        property real realProgress: progress / progressMax
         property bool isOpen: false
-        property real progress: 0.0
-        property int maxWidth: Math.min( sideBarId.maxBarWidth,
-                                        sideBarId.parent.width )
     }
-
 
     Rectangle
     {
@@ -68,46 +67,50 @@ MouseArea
     }
 
 
-    NumberAnimation
-    {
-        id: openAnimationId
-        target: privates
-        property: "progress"
-        to: 1.0
-        duration: Math.abs( 1.0 - privates.progress ) * openAnimationDurationMs
-        easing.type: Easing.OutQuad
-    }
+    states: [
 
-    NumberAnimation
-    {
-        id: closeAnimationId
-        target: privates
-        property: "progress"
-        to: 0.0
-        duration: Math.abs( 0.0 - privates.progress ) * openAnimationDurationMs
-        easing.type: Easing.OutQuad
-    }
+        State {
 
-    //    SequentialAnimation
-    //    {
-    //        running: true
-    //        loops: Animation.Infinite
+            name: "CLOSED"
+        },
 
-    //        NumberAnimation
-    //        {
-    //            target: privates
-    //            property: "progress"
-    //            to: 0.0
-    //            duration: 1000
-    //        }
+        State {
 
-    //        NumberAnimation
-    //        {
-    //            target: privates
-    //            property: "progress"
-    //            to: 1.0
-    //            duration: 1000
-    //        }
-    //    }
+            name: "OPEN"
+        }
+
+    ]
+
+    transitions: [
+
+        Transition
+        {
+            from: "CLOSED"
+            to: "OPEN"
+            NumberAnimation
+            {
+                target: privates
+                property: "progress"
+                to: privates.progressMax
+                duration: Math.abs( 1.0 - privates.realProgress ) * openAnimationDurationMs
+                easing.type: Easing.OutQuad
+            }
+        },
+
+        Transition
+        {
+            from: "OPEN"
+            to: "CLOSED"
+            NumberAnimation
+            {
+                target: privates
+                property: "progress"
+                to: 0
+                duration: Math.abs( 0.0 - privates.realProgress ) * openAnimationDurationMs
+                easing.type: Easing.OutQuad
+            }
+        }
+
+    ]
 
 }
