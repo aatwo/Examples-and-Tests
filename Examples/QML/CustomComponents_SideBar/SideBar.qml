@@ -7,14 +7,36 @@ MouseArea
     property int closeAnimationDurationMs: 500
     property int maxBarWidth: 300
 
+    //------------------------------------------------------------------------------
+
     id: sideBarId
     state: "CLOSED"
-
-    //x: privates.progress > 0.0
-    //width: parent.width
+    width: parent.width
     height: parent.height
-    x: -privates.maxWidth + ( privates.realProgress * privates.maxWidth )
-    width: privates.maxWidth
+    x: 0
+    y: 0
+
+    QtObject
+    {
+        id: privates
+
+        property int maxWidth: Math.min( sideBarId.maxBarWidth, sideBarId.parent.width )
+        property int progress: 0
+        property int progressMax: 1000
+        property real realProgress: progress / progressMax
+        property bool isOpen: false
+    }
+
+    onClicked:
+    {
+        if( isOpen() )
+            close()
+
+        else
+            open()
+    }
+
+    //------------------------------------------------------------------------------
 
     function isOpen()
     {
@@ -43,29 +65,45 @@ MouseArea
         print( "Side bar closing..." )
     }
 
-    QtObject
-    {
-        id: privates
-
-        property int maxWidth: Math.min( sideBarId.maxBarWidth, sideBarId.parent.width )
-        property int progress: 0
-        property int progressMax: 1000
-        property real realProgress: progress / progressMax
-        property bool isOpen: false
-    }
+    //------------------------------------------------------------------------------
 
     Rectangle
     {
-        anchors.fill: parent
+        id: barRectId
+
+        x: -width + ( privates.realProgress * width )
+        width: privates.maxWidth
+        height: parent.height
+
         color: "red"
 
         Text
         {
             anchors.centerIn: parent
-            text: "CUSTOM DRAWER"
+            color: "white"
+            text: parent.width
         }
     }
 
+    Rectangle
+    {
+        id: shadowRectId
+
+        x: barRectId.x + barRectId.width
+        width: parent.width - ( privates.realProgress * barRectId.width )
+        height: parent.height
+        color: "black"
+        opacity: privates.realProgress * 0.5
+
+        Text
+        {
+            anchors.centerIn: parent
+            color: "white"
+            text: parent.width
+        }
+    }
+
+    //------------------------------------------------------------------------------
 
     states: [
 
@@ -87,6 +125,7 @@ MouseArea
         {
             from: "CLOSED"
             to: "OPEN"
+
             NumberAnimation
             {
                 target: privates
