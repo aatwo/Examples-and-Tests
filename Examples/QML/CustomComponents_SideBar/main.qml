@@ -9,17 +9,22 @@ ApplicationWindow {
     height: 480
     title: qsTr("Hello World")
 
-    Button
+    // Contents
+    Rectangle
     {
-        anchors.centerIn: parent
-        text: "Toggle side bar"
-        onClicked:
+        anchors.fill: parent
+        color: "yellow"
+        Button
         {
-            if( sideBarId.isOpen() )
-                sideBarId.close()
-
-            else
-                sideBarId.open()
+            text: "Open sidebar"
+            anchors.centerIn: parent
+            onClicked:
+            {
+                if( sideBarId.isOpen() )
+                    sideBarId.close()
+                else
+                    sideBarId.open()
+            }
         }
     }
 
@@ -27,20 +32,4 @@ ApplicationWindow {
     {
         id: sideBarId
     }
-
-
-    // The following code uses the Qt Quick Drawer component to provide a side bar
-    //    Drawer
-    //    {
-    //        property int maxWidth: Math.min( 300, windowId.width )
-
-    //        width: maxWidth
-    //        height: windowId.height
-
-    //        Text
-    //        {
-    //            anchors.centerIn: parent
-    //            text: "DRAWER"
-    //        }
-    //    }
 }

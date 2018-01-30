@@ -1,15 +1,17 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 
-MouseArea
+FocusScope
 {
+
+    id: sideBarId
+
     property int openAnimationDurationMs: 500
     property int closeAnimationDurationMs: 500
     property int maxBarWidth: 300
 
     //------------------------------------------------------------------------------
 
-    id: sideBarId
     state: "CLOSED"
     width: parent.width
     height: parent.height
@@ -25,15 +27,7 @@ MouseArea
         property int progressMax: 1000
         property real realProgress: progress / progressMax
         property bool isOpen: false
-    }
-
-    onClicked:
-    {
-        if( isOpen() )
-            close()
-
-        else
-            open()
+        property bool isFullyClosed: progress == 0
     }
 
     //------------------------------------------------------------------------------
@@ -50,8 +44,7 @@ MouseArea
 
         privates.isOpen = true
         sideBarId.state = "OPEN"
-
-        print( "Side bar opening..." )
+        sideBarId.focus = true
     }
 
     function close()
@@ -61,46 +54,71 @@ MouseArea
 
         privates.isOpen = false
         sideBarId.state = "CLOSED"
-
-        print( "Side bar closing..." )
+        sideBarId.focus = false
     }
 
     //------------------------------------------------------------------------------
 
-    Rectangle
+    MouseArea
     {
-        id: barRectId
+        anchors.fill: parent
+        visible: !privates.isFullyClosed
 
-        x: -width + ( privates.realProgress * width )
-        width: privates.maxWidth
-        height: parent.height
-
-        color: "red"
-
-        Text
+        Rectangle
         {
-            anchors.centerIn: parent
-            color: "white"
-            text: parent.width
+            id: barRectId
+            x: -width + ( privates.realProgress * width )
+            width: privates.maxWidth
+            height: parent.height
+            color: "red"
+
+
+            // Contents
+            Flickable
+            {
+                anchors.fill: parent
+                contentHeight: contentsColumnId.height
+
+                Column
+                {
+                    id: contentsColumnId
+                    width: parent.width
+
+                    Button{ text: "Close sidebar"; width: parent.width; onClicked: { close() } }
+                    Button{ text: "Button 2"; width: parent.width }
+                    Button{ text: "Button 3"; width: parent.width }
+                    Button{ text: "Button 4"; width: parent.width }
+                    Button{ text: "Button 5"; width: parent.width }
+                    Button{ text: "Button 6"; width: parent.width }
+                    Button{ text: "Button 7"; width: parent.width }
+                    Button{ text: "Button 8"; width: parent.width }
+                    Button{ text: "Button 9"; width: parent.width }
+                    Button{ text: "Button 10"; width: parent.width }
+                    Button{ text: "Button 11"; width: parent.width }
+                    Button{ text: "Button 12"; width: parent.width }
+                    Button{ text: "Button 13"; width: parent.width }
+                    Button{ text: "Button 14"; width: parent.width }
+                    Button{ text: "Button 15"; width: parent.width }
+                    Button{ text: "Button 16"; width: parent.width }
+                    Button{ text: "Button 17"; width: parent.width }
+                    Button{ text: "Button 18"; width: parent.width }
+                    Button{ text: "Button 19"; width: parent.width }
+                    Button{ text: "Button 20"; width: parent.width }
+                }
+            }
         }
-    }
 
-    Rectangle
-    {
-        id: shadowRectId
-
-        x: barRectId.x + barRectId.width
-        width: parent.width - ( privates.realProgress * barRectId.width )
-        height: parent.height
-        color: "black"
-        opacity: privates.realProgress * 0.5
-
-        Text
+        Rectangle
         {
-            anchors.centerIn: parent
-            color: "white"
-            text: parent.width
+            id: shadowRectId
+
+            x: barRectId.x + barRectId.width
+            width: parent.width - ( privates.realProgress * barRectId.width )
+            height: parent.height
+            color: "black"
+            opacity: privates.realProgress * 0.5
         }
+
     }
 
     //------------------------------------------------------------------------------
