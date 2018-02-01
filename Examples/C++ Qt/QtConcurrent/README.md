@@ -1,0 +1,1 @@
+This example demonstrates the use of the QtConcurrent blocking functions that perform tasks on sequences and then block until finished.

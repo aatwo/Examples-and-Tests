@@ -1,0 +1,1 @@
+This example demonstrates the use of the QtConcurrent non-blocking functions that perform tasks on sequences provide a result at some point in the future.

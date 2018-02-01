@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QtCore>
 #include <QtConcurrent>
+#include <QFuture>
 #include <thread>
 #include <functional>
 #include "timer.h"
@@ -16,16 +17,15 @@ const int delayDurationMs = 500;
 using namespace std;
 
 
-void blockingFilteredReduced_reduceFunction( int& result, const int& value )
+void filteredReduced_reduceFunction( int& result, const int value )
 {
     result += value;
 }
 
-void blockingMappedReduced_reduceFunction( int& result, const int& value )
+void mappedReduced_reduceFunction( int& result, const int value )
 {
     result -= value;
 }
-
 
 int main( int argc, char* argv[] )
 {
@@ -43,104 +43,18 @@ int main( int argc, char* argv[] )
 
 
     //------------------------------------------------------------------------------
-    // QtConcurrent::blockingMapped
+    // QtConcurrent::filter
     {
-        cout << "QtConcurrent::blockingMapped...\n";
+        cout << "QtConcurrent::filter...\n";
 
         // Create list of values
         QList<int> valueList = generateValueList( 10 );
 
         // Function that takes some time to finish
-        auto mapFunction = []( const int value ) -> int
-        {
-            this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
-            return value * 10;
-        };
-
-        // Wrap our lambda in an std::function
-        function<int(const int)> mapFunctionWrapper = mapFunction;
-
-        // Called the blockingMapped function
-        Timer t;
-        QList<int> mappedValueList = QtConcurrent::blockingMapped( valueList, mapFunctionWrapper );
-        auto elapsedMs = t.elapsedMs();
-
-        cout << "Elapsed ms: " << elapsedMs << "\n";
-        for( int value : mappedValueList )
-            cout << "Value: " << value << "\n";
-    }
-
-
-    //------------------------------------------------------------------------------
-    // QtConcurrent::blockingMap
-    {
-        cout << "\n\nQtConcurrent::blockingMap...\n";
-
-        QList<int> valueList = generateValueList( 10 );
-
-        // Function that takes some time to finish
-        auto mapFunction = []( int& value ) -> void
-        {
-            this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
-            value *= 11;
-        };
-
-        // Wrap our lambda in an std::function
-        function<void(int&)> mapFunctionWrapper = mapFunction;
-
-        // Call the blockingMap function (note this doesnt return a copy, instead
-        // it directly modifies the original)
-        Timer t;
-        QtConcurrent::blockingMap( valueList, mapFunctionWrapper );
-        auto elapsedMs = t.elapsedMs();
-
-        cout << "Elapsed ms: " << elapsedMs << "\n";
-        for( int value : valueList )
-            cout << "Value: " << value << "\n";
-    }
-
-
-    //------------------------------------------------------------------------------
-    // QtConcurrent::blockingMappedReduced
-    {
-        cout << "\n\nQtConcurrent::blockingMappedReduced...\n";
-
-        QList<int> valueList = generateValueList( 10 );
-
-        // Function that takes some time to finish
-        auto mappedFunction = []( const int value ) -> int
-        {
-            this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
-            return value * 5;
-        };
-
-        // Wrap our lambda in an std::function
-        function<int(const int)> mappedFunctionWrapper = mappedFunction;
-
-        Timer t;
-        QtConcurrent::ReduceOptions reduceOptions = QtConcurrent::UnorderedReduce | QtConcurrent::SequentialReduce;
-        int result = QtConcurrent::blockingMappedReduced( valueList, mappedFunctionWrapper, blockingMappedReduced_reduceFunction, reduceOptions );
-        auto elapsedMs = t.elapsedMs();
-
-        cout << "Elapsed ms: " << elapsedMs << "\n";
-        cout << "Reduction result: " << result << "\n";
-    }
-
-
-    //------------------------------------------------------------------------------
-    // Qt::Concurrent::blockingFilter
-    {
-        cout << "\n\nQtConcurrent::blockingFilter...\n";
-        QList<int> valueList = generateValueList( 10 );
-
-        // Function that takes some time to finish and returns true if the value
-        // param should stay in the list or false if it is to be removed
         auto filterFunction = []( const int value ) -> bool
         {
             this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
-
-            // Filter out odd numbers
-            bool isOdd = ( value % 2 ) > 0;
+            bool isOdd = ( value % 2 > 0 );
             if( isOdd )
                 return false;
 
@@ -151,29 +65,32 @@ int main( int argc, char* argv[] )
         function<bool(const int)> filterFunctionWrapper = filterFunction;
 
         Timer t;
-        QtConcurrent::blockingFilter( valueList, filterFunctionWrapper );
+        QFuture<void> filterListFuture = QtConcurrent::filter( valueList, filterFunctionWrapper );
+        filterListFuture.waitForFinished();
         auto elapsedMs = t.elapsedMs();
 
         cout << "Elapsed ms: " << elapsedMs << "\n";
+
         for( int value : valueList )
+        {
             cout << "Value: " << value << "\n";
+        }
     }
 
 
     //------------------------------------------------------------------------------
-    // Qt::Concurrent::blockingFiltered
+    // QtConcurrent::filtered
     {
-        cout << "\n\nQtConcurrent::blockingFiltered...\n";
+        cout << "\n\nQtConcurrent::filtered...\n";
+
+        // Create list of values
         QList<int> valueList = generateValueList( 10 );
 
-        // Function that takes some time to finish and returns true if the value
-        // param should stay in the list or false if it is to be removed
+        // Function that takes some time to finish
         auto filterFunction = []( const int value ) -> bool
         {
             this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
-
-            // Filter out even numbers
-            bool isEven = ( value % 2 ) == 0;
+            bool isEven = ( value % 2 == 0 );
             if( isEven )
                 return false;
 
@@ -184,47 +101,145 @@ int main( int argc, char* argv[] )
         function<bool(const int)> filterFunctionWrapper = filterFunction;
 
         Timer t;
-        QList<int> filteredValueList = QtConcurrent::blockingFiltered( valueList, filterFunctionWrapper );
+        QFuture<int> filteredListFuture = QtConcurrent::filtered( valueList, filterFunctionWrapper );
+        filteredListFuture.waitForFinished();
         auto elapsedMs = t.elapsedMs();
 
         cout << "Elapsed ms: " << elapsedMs << "\n";
-        for( int value : filteredValueList )
+
+        for( int value : filteredListFuture )
+        {
             cout << "Value: " << value << "\n";
+        }
     }
 
 
     //------------------------------------------------------------------------------
-    // Qt::Concurrent::blockingFilteredReduced
-    // Note: this function for some reason does not support std::function for the reduce function only
+    // QtConcurrent::filteredReduced
     {
-        cout << "\n\nQtConcurrent::blockingFilteredReduced...\n";
+        cout << "\n\nQtConcurrent::filteredReduced...\n";
 
-        QList<int> valueList = generateValueList( 30 );
+        // Create list of values
+        QList<int> valueList = generateValueList( 10 );
 
+        // Function that takes some time to finish
         auto filterFunction = []( const int value ) -> bool
         {
             this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
-
-            // Filter out numbers not divisible by three
-            bool isDivisibleByThree = ( value % 3 ) == 0;
+            bool isDivisibleByThree = ( value % 3 == 0 );
             if( !isDivisibleByThree )
                 return false;
 
             return true;
         };
 
+        // Wrap our lambda in an std::function
         function<bool(const int)> filterFunctionWrapper = filterFunction;
 
         Timer t;
         QtConcurrent::ReduceOptions reduceOptions = QtConcurrent::UnorderedReduce | QtConcurrent::SequentialReduce;
-        int result = QtConcurrent::blockingFilteredReduced( valueList, filterFunctionWrapper, blockingFilteredReduced_reduceFunction, reduceOptions );
+        QFuture<int> filteredListFuture = QtConcurrent::filteredReduced( valueList, filterFunctionWrapper, filteredReduced_reduceFunction, reduceOptions );
+        filteredListFuture.waitForFinished();
         auto elapsedMs = t.elapsedMs();
 
         cout << "Elapsed ms: " << elapsedMs << "\n";
+
+        // Note there should only be one result since the reduce function produces a single value output
+        int result = filteredListFuture.result();
         cout << "Reduction result: " << result << "\n";
     }
 
 
+    //------------------------------------------------------------------------------
+    // QtConcurrent::map
+    {
+        cout << "\n\nQtConcurrent::map...\n";
+
+        // Create list of values
+        QList<int> valueList = generateValueList( 10 );
+
+        // Function that takes some time to finish
+        auto mapFunction = []( int& value ) -> void
+        {
+            this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
+            value *= 6;
+        };
+
+        // Wrap our lambda in an std::function
+        function<void(int&)> mapFunctionWrapper = mapFunction;
+
+        Timer t;
+        QFuture<void> mapListFuture = QtConcurrent::map( valueList, mapFunctionWrapper );
+        mapListFuture.waitForFinished();
+        auto elapsedMs = t.elapsedMs();
+
+        cout << "Elapsed ms: " << elapsedMs << "\n";
+
+        for( int value : valueList )
+            cout << "value: " << value << "\n";
+    }
+
+
+    //------------------------------------------------------------------------------
+    // QtConcurrent::mapped
+    {
+        cout << "\n\nQtConcurrent::mapped...\n";
+
+        // Create list of values
+        QList<int> valueList = generateValueList( 10 );
+
+        // Function that takes some time to finish
+        auto mapFunction = []( const int value ) -> int
+        {
+            this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
+            return value * 7;
+        };
+
+        // Wrap our lambda in an std::function
+        function<int(const int)> mapFunctionWrapper = mapFunction;
+
+        Timer t;
+        QFuture<int> mappedListFuture = QtConcurrent::mapped( valueList, mapFunctionWrapper );
+        mappedListFuture.waitForFinished();
+        auto elapsedMs = t.elapsedMs();
+
+        cout << "Elapsed ms: " << elapsedMs << "\n";
+
+        for( int value : mappedListFuture )
+            cout << "value: " << value << "\n";
+    }
+
+
+    //------------------------------------------------------------------------------
+    // QtConcurrent::mappedReduced
+    {
+        cout << "\n\nQtConcurrent::mappedReduced...\n";
+
+        // Create list of values
+        QList<int> valueList = generateValueList( 10 );
+
+        // Function that takes some time to finish
+        auto mapFunction = []( const int value ) -> int
+        {
+            this_thread::sleep_for( chrono::milliseconds( delayDurationMs ) );
+            return value * 7;
+        };
+
+        // Wrap our lambda in an std::function
+        function<int(const int)> mapFunctionWrapper = mapFunction;
+
+        Timer t;
+        QtConcurrent::ReduceOptions reduceOptions = QtConcurrent::UnorderedReduce | QtConcurrent::SequentialReduce;
+        QFuture<int> processedListFuture = QtConcurrent::mappedReduced( valueList, mapFunctionWrapper, mappedReduced_reduceFunction, reduceOptions );
+        processedListFuture.waitForFinished();
+        auto elapsedMs = t.elapsedMs();
+
+        cout << "Elapsed ms: " << elapsedMs << "\n";
+
+        // Note there should only be one result since the mappedReduced function produces a single value output
+        int result = processedListFuture.result();
+        cout << "Reduction result: " << result << "\n";
+    }
 
     int value;
     cin >> value;
