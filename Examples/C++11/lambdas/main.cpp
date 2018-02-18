@@ -104,6 +104,43 @@ int main( int argc, char** argv )
         lambda( count );
     }
 
+    { // Template lambda
+
+        auto templateLambda = []<typename T>( T a, T b )
+        {
+            return a * b;
+        };
+
+        cout << "Hello from template lambda: " << templateLambda( 4, 5 ) << endl;
+        
+        // Note the type automatic deduction for T in the function call, and the return type of the lambda. 
+    }
+
+    { // Mutable
+
+        struct MyStruct
+        {
+            MyStruct( int a, int b ) : a( a ), b( b ){}
+
+            int getA() { return a; }
+            int getB() const { return b; }
+
+            int a;
+            int b;
+        };
+
+        MyStruct a( 1, 2 );
+
+        auto lambda = [a]() mutable
+        {
+            cout << "a = " << a.getA() << ", b = " << a.getB() << endl;
+        };
+
+        lambda();
+
+        // THe mutable keyword is required as captured copy variables are const by default. Mutable allows you to call their const member functionss.
+    }
+
     cout << "\n\n";
     return 0;
 }
