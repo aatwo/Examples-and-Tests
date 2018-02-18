@@ -1,6 +1,6 @@
 # MutablePasswordsAreBad
 
-I've noticed a number of people mentioning that they use mutable passwords, i.e. all their passwords follow some common set of rules such that they need only to remember the rules from which they can generate any of their passwords. While this is significantly better than the common practice of using one password for everything, it is still significantly worse than using a password manager. This is because if any of your passwords are obtained by an attacker they could use it as a base for guessing your other passwords. Even worse if more than one of your passwords are discovered because it makes it easier for someone to see patterns. This might seem far fetched at first but when you consider than there are hundreds of thousands of websites allowing users to create accounts it becomes slightly more concerning. By using mutable passwords you are betting on the fact that every single one of the fifty or so websites that you have passwords with are using the latest security technologies, practices and procedures at all times. Obviously this isn't how it works in the real world and hacks occur all the time, many of which you might not hear about for years if ever (see https://haveibeenpwned.com/ for a great list of known breaches) and it's definitely fair to say that it's not unlikely that at least two of your passwords will at some point be simultaneously exposed to the world.
+Mutable passwords are passwords that follow a common set of rules based off of one or more service specific parameters (e.g. the service name). This allows you to have a unique password for each website / service you use and as long as you remember the rules for generating the passwords you don't need to remember the actual passwords themselves. While this is significantly better than the common practice of using one password for everything, it is still significantly worse than using a password manager. This is because if any of your passwords are obtained by an attacker they could use it as a base for guessing your other passwords. This is made much worse if more than one of your passwords are discovered because it makes it easier for someone to see patterns. This might seem far fetched at first but when you consider than there are hundreds of thousands of websites allowing users to create accounts it becomes slightly more concerning. By using mutable passwords you are betting on the fact that every single one of the fifty or so websites that you have passwords with are using the latest security technologies, practices and procedures at all times. Obviously this isn't how it works in the real world and hacks occur all the time, many of which you might not hear about for years if ever (see https://haveibeenpwned.com/ for a great list of known breaches) and it's definitely fair to say that it's not unlikely that at least two of your passwords will at some point be simultaneously exposed to the world.
 
 This small application plays on a scenario where a user has three accounts. One for Google, another for Spotify and another for Facebook. The passwords for these websites were generated using the following rules:
 
@@ -20,9 +20,11 @@ Google: 6=20g15E2010rabbit.
 Spotify: 7–21s16Y2009rabbit.
 Facebook: 8=22f17k2008rabbit.
 
+As you can see the ruleset is quite complex and generates some decently different looking passwords. 
+
 In our hypothetical situation we play the role of an attacker who has gained access to this users Google and Spotify passwords and we want to access their facebook account. How might we accomplish this? 
 
-Firstly we would look at those two passwords and attempt to guess the rules being used. Just by looking at these two passwords (Google: 6=20g15E2010rabbit. and Spotify: 7–21s16Y2009rabbit.) the following rules can easily be approximated:
+Just by looking at the Google and Spotify passwords we can attempt to guess the rules being used:
 
 1. char 1: company name length (this one is pretty obvious)
 2. char 2: = or -
@@ -42,3 +44,6 @@ After running the password guessing program five times here are the number of at
 3. 3002
 4. 77
 5. 1487
+
+
+As you can see ruleset approximation for mutable passwords gives a very strong advantage to the attacker as the normal chance of guessing a password has been severely increased.
