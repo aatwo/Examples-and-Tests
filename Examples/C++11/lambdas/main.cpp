@@ -61,6 +61,49 @@ int main( int argc, char** argv )
         myLambda();
     }
 
+    { // lambda calling another lambda
+
+        auto lambdaOne = []() -> string
+        {
+            return "hello from lambda Two";
+        };
+
+        auto lambdaTwo = [lambdaOne]()
+        {
+            cout << "Hello from lambda One + " << lambdaOne() << endl;
+        };
+
+        lambdaTwo();
+    }
+
+    { // std::function lambda
+
+        function<int(int, int)> lambdaOne = []( int a, int b ) -> int 
+        {
+            return a * b;
+        };
+
+        cout << "Hello from lambda stored as std::function object. 8 * 9 = " << lambdaOne( 8, 9 ) << endl;
+    }
+
+    { // Recursive lambda
+
+        int maxCount = 5;
+        int count = 0;
+        function<void( int& )> lambda;
+        lambda = [&lambda, &maxCount]( int& count )
+        {
+            count++;
+            if( count >= maxCount )
+                return;
+
+            cout << "Hello from recursive lambda (" << count << ")..." << endl;
+            lambda( count );
+        };
+
+        lambda( count );
+    }
+
     cout << "\n\n";
     return 0;
 }
