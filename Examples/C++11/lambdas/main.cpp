@@ -1,8 +1,7 @@
 #include <iostream>
 #include <string>
 #include <functional>
-
-using namespace std;
+#include <type_traits>
 
 int main( int argc, char** argv )
 {
@@ -10,7 +9,7 @@ int main( int argc, char** argv )
 
         auto myLambda = []()
         {
-            cout << "Hello from simple lambda!" << endl;
+            std::cout << "Hello from simple lambda!" << std::endl;
         };
 
         myLambda();
@@ -18,9 +17,9 @@ int main( int argc, char** argv )
 
     { // lambda with params
 
-        auto myLambda = []( int intParam, string stringParam )
+        auto myLambda = []( int intParam, std::string stringParam )
         {
-            cout << "Hello from lambda with params: " << intParam << " + " << stringParam << endl;
+            std::cout << "Hello from lambda with params: " << intParam << " + " << stringParam << std::endl;
         };
 
         myLambda( 12, "string param" );
@@ -28,34 +27,57 @@ int main( int argc, char** argv )
 
     { // lambda with capture variable by value
 
-        string testString = "test";
+        std::string testString = "test";
         auto myLambda = [testString]()
         {
-            cout << "Hello from lambda with capture variable by value: " << testString << endl;
+            std::cout << "Hello from lambda with capture variable by value: " << testString << std::endl;
         };
 
         myLambda();
+    }
+
+    { // lambda with trailing return type
+
+        { // Without trailing return type this lambda which returns a string literal will return a value of type const char*
+            auto lambdaOne = []()
+            {
+                return "test string";
+            };
+
+            bool is_const_char_ptr = std::is_same<decltype(lambdaOne()), const char*>::value;
+            std::cout << "Trailing return type ommitted results in a const char* being returned when returning a string literal: " << (is_const_char_ptr ? "true" : "false") << std::endl;
+        }
+
+        { // With the trailing return type specified a string will be returned
+            auto lambdaTwo = []() -> std::string
+            {
+                return "test string";
+            };
+
+            bool is_string = std::is_same<decltype(lambdaTwo()), std::string>::value;
+            std::cout << "Trailing return type specified results in an std::string being returned when returning a string literal: " << (is_string ? "true" : "false") << std::endl;
+        }        
     }
 
     { // lambda with capture variable by reference
     
-        string testString = "test";
+        std::string testString = "test";
         auto myLambda = [&testString]()
         {
-            cout << "Hello from lambda with capture variable by reference: " << testString << endl;
+            std::cout << "Hello from lambda with capture variable by reference: " << testString << std::endl;
             testString += " modified by lambda";
         };
 
         myLambda();
-        cout << "Test string after lambda call: " << testString << endl;
+        std::cout << "Test std::string after lambda call: " << testString << std::endl;
     }
 
     { // lambda with capture variable by capture value assignment
     
-        string testString = "test";
+        std::string testString = "test";
         auto myLambda = [testString2 = testString + " modified by capture initialisation"]()
         {
-            cout << "Hello from lambda with capture variable by capture value assignment: " << testString2 << endl;
+            std::cout << "Hello from lambda with capture variable by capture value assignment: " << testString2 << std::endl;
         };
 
         myLambda();
@@ -63,57 +85,57 @@ int main( int argc, char** argv )
 
     { // lambda calling another lambda
 
-        auto lambdaOne = []() -> string
+        auto lambdaOne = []() -> std::string
         {
             return "hello from lambda Two";
         };
 
         auto lambdaTwo = [lambdaOne]()
         {
-            cout << "Hello from lambda One + " << lambdaOne() << endl;
+            std::cout << "Hello from lambda One + " << lambdaOne() << std::endl;
         };
 
         lambdaTwo();
     }
 
-    { // std::function lambda
+    { // function lambda
 
-        function<int(int, int)> lambdaOne = []( int a, int b ) -> int 
+        std::function<int(int, int)> lambdaOne = []( int a, int b ) -> int 
         {
             return a * b;
         };
 
-        cout << "Hello from lambda stored as std::function object. 8 * 9 = " << lambdaOne( 8, 9 ) << endl;
+        std::cout << "Hello from lambda stored as function object. 8 * 9 = " << lambdaOne( 8, 9 ) << std::endl;
     }
 
     { // Recursive lambda
 
         int maxCount = 5;
         int count = 0;
-        function<void( int& )> lambda;
+        std::function<void( int& )> lambda;
         lambda = [&lambda, &maxCount]( int& count )
         {
             count++;
             if( count >= maxCount )
                 return;
 
-            cout << "Hello from recursive lambda (" << count << ")..." << endl;
+            std::cout << "Hello from recursive lambda (" << count << ")..." << std::endl;
             lambda( count );
         };
 
         lambda( count );
     }
 
-    { // Template lambda
+    { // Template lambda (C++14)
 
-        auto templateLambda = []<typename T>( T a, T b )
+        auto templateLambda = []( auto a, auto b )
         {
             return a * b;
         };
 
-        cout << "Hello from template lambda: " << templateLambda( 4, 5 ) << endl;
+        std::cout << "Hello from template lambda: " << templateLambda( 4, 5 ) << std::endl;
         
-        // Note the type automatic deduction for T in the function call, and the return type of the lambda. 
+        // Note the type automatic deduction for a, b and the return type
     }
 
     { // Mutable
@@ -133,14 +155,14 @@ int main( int argc, char** argv )
 
         auto lambda = [a]() mutable
         {
-            cout << "a = " << a.getA() << ", b = " << a.getB() << endl;
+            std::cout << "a = " << a.getA() << ", b = " << a.getB() << std::endl;
         };
 
         lambda();
 
-        // THe mutable keyword is required as captured copy variables are const by default. Mutable allows you to call their const member functionss.
+        // The mutable keyword is required as captured copy variables are const by default. Mutable allows you to call their const member functions.
     }
 
-    cout << "\n\n";
+    std::cout << "\n\n";
     return 0;
 }
