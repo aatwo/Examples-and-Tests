@@ -103,8 +103,8 @@ int main( int argc, char** argv )
 
         { // Create a file only this time we are using the string literal specifier for a utf8 encoded char*
 
-            std::string s1 = "🐱‍🐉";
-			std::string s2 = u8"🐱‍🐉";
+            std::string s1 = "🎂";
+			std::string s2 = u8"🎂";
 
 			std::cout << "s1: ";
 			for (const char& c : s1)
