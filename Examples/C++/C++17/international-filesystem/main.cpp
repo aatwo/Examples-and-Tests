@@ -20,6 +20,22 @@ std::wstring utf8_to_utf16(const std::string& str)
     return conv.from_bytes(str);
 }
 
+struct HexCharStruct
+{
+	unsigned char c;
+	HexCharStruct(unsigned char _c) : c(_c) { }
+};
+
+inline std::ostream& operator<<(std::ostream& o, const HexCharStruct& hs)
+{
+	return (o << std::hex << (int)hs.c);
+}
+
+inline HexCharStruct hex(unsigned char _c)
+{
+	return HexCharStruct(_c);
+}
+
 int main( int argc, char** argv )
 {
     try
@@ -84,6 +100,31 @@ int main( int argc, char** argv )
             f << u8"田中さんにあげて下さい";
         }
 #endif
+
+        { // Create a file only this time we are using the string literal specifier for a utf8 encoded char*
+
+            std::string s1 = "🐱‍🐉";
+			std::string s2 = u8"🐱‍🐉";
+
+			std::cout << "s1: ";
+			for (const char& c : s1)
+				std::cout << hex(c) << " ";
+
+			std::cout << "\n";
+
+			std::cout << "s2: ";
+			for (const char& c : s2)
+				std::cout << hex(c) << " ";
+
+            std::filesystem::path path = std::filesystem::u8path(u8"💋.txt");
+            std::ofstream f(path);
+            if(!f.is_open())
+                throw std::runtime_error("unable to open file");
+
+            f << "찦차를 타고 온온온온온🐱‍🐉🐱‍👓🐱‍🚀✔👀😃✨🐱‍🏍🐱‍👤🤳";
+
+            // While this works on Linux, it is better to specify the path using u8path since that is cross platform
+        }
 
         // TODO: what's a good cross platform strategy given linux operates in utf8 and windows operates in utf16
         
