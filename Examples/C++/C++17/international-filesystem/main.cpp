@@ -104,7 +104,7 @@ int main( int argc, char** argv )
         { // Create a file only this time we are using the string literal specifier for a utf8 encoded char*
 
             std::string s1 = "🎂";
-			std::string s2 = u8"🎂";
+			std::string s2 = u8"🎂"; // Note using u8 literals on Windows (MSVC 2019) only works if you use the /utf-8 compiler flag otherwise it ignores the file encoding and assumes Windows-1252
 
 			std::cout << "s1: ";
 			for (const char& c : s1)
